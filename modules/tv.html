@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MegaNet - Cable TV Subscription</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: { primary: '#0F2D52', secondary: '#00C2FF', accent: '#22C55E', background: '#F8FAFC' }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col bg-background font-sans text-gray-800">
+
+    <!-- Top Navigation -->
+    <nav class="bg-primary text-white px-6 py-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center space-x-3">
+            <span class="text-2xl font-bold tracking-wider text-secondary">MEGANET</span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:block text-xs text-right bg-blue-900 px-3 py-1.5 rounded-lg border border-blue-800">
+                <span class="text-gray-400 block" style="font-size: 0.65rem;">AVAILABLE BALANCE</span>
+                <span id="navBalance" class="font-bold text-secondary">₦0.00</span>
+            </div>
+            <a href="../dashboard/customer.html" class="bg-white/10 hover:bg-white/20 text-white text-xs px-4 py-2 rounded-lg font-bold transition duration-200">← Dashboard</a>
+        </div>
+    </nav>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-grow flex items-center justify-center p-4 md:p-8">
+        
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+            
+            <!-- Header Section -->
+            <div class="bg-purple-50 p-6 text-center border-b border-purple-100">
+                <div class="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl shadow-sm">
+                    📺
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Cable TV</h2>
+                <p class="text-sm text-gray-500 mt-1">Instant DStv, GOtv & Startimes Renewal</p>
+            </div>
+
+            <!-- Procurement Form -->
+            <form id="tvForm" class="p-6 space-y-5">
+                
+                <!-- Provider Selection (Radios for visual appeal) -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Select Provider</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="border-2 border-gray-200 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition focus-within:border-blue-500 bg-white">
+                            <input type="radio" name="provider" value="DStv" class="sr-only" required checked>
+                            <span class="text-sm font-bold text-gray-800">DStv</span>
+                        </label>
+                        <label class="border-2 border-gray-200 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition focus-within:border-green-500 bg-white">
+                            <input type="radio" name="provider" value="GOtv" class="sr-only">
+                            <span class="text-sm font-bold text-gray-800">GOtv</span>
+                        </label>
+                        <label class="border-2 border-gray-200 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition focus-within:border-orange-500 bg-white">
+                            <input type="radio" name="provider" value="Startimes" class="sr-only">
+                            <span class="text-sm font-bold text-gray-800">Startimes</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Package Selection -->
+                <div>
+                    <label for="packageSelect" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Select Bouquet / Package</label>
+                    <select id="packageSelect" class="w-full bg-slate-50 border border-gray-200 p-3.5 rounded-xl font-medium text-gray-800 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition" required>
+                        <option value="" disabled selected>Select a subscription package...</option>
+                        <optgroup label="DStv Packages">
+                            <option value="3500" data-desc="DStv Yanga">DStv Yanga — ₦3,500</option>
+                            <option value="5700" data-desc="DStv Confam">DStv Confam — ₦5,700</option>
+                            <option value="10500" data-desc="DStv Compact">DStv Compact — ₦10,500</option>
+                            <option value="16600" data-desc="DStv Compact Plus">DStv Compact Plus — ₦16,600</option>
+                        </optgroup>
+                        <optgroup label="GOtv Packages">
+                            <option value="2250" data-desc="GOtv Jinja">GOtv Jinja — ₦2,250</option>
+                            <option value="3200" data-desc="GOtv Jolli">GOtv Jolli — ₦3,200</option>
+                            <option value="4850" data-desc="GOtv Max">GOtv Max — ₦4,850</option>
+                        </optgroup>
+                        <optgroup label="Startimes Packages">
+                            <option value="2100" data-desc="Startimes Basic">Startimes Basic — ₦2,100</option>
+                            <option value="3100" data-desc="Startimes Classic">Startimes Classic — ₦3,100</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- Smartcard / IUC Number -->
+                <div>
+                    <label for="iucInput" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Smartcard / IUC Number</label>
+                    <input id="iucInput" type="text" placeholder="e.g. 1023456789" minlength="10" maxlength="11" class="w-full bg-slate-50 border border-gray-200 p-3.5 rounded-xl font-mono tracking-widest text-gray-800 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition" required>
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full bg-primary hover:bg-blue-900 text-white py-4 rounded-xl font-bold shadow-lg transition duration-200 mt-4 flex justify-center items-center uppercase tracking-wide text-sm">
+                    <span>Activate Subscription</span>
+                </button>
+
+            </form>
+
+            <!-- Status & Receipt Message -->
+            <div id="statusMessage" class="hidden px-6 pb-6 text-center text-sm font-semibold"></div>
+
+        </div>
+    </main>
+
+    <!-- Supabase Execution Engine -->
+    <script type="module">
+        import { supabase } from "../js/supabase-config.js";
+
+        let currentUser = null;
+        let currentBalance = 0;
+
+        // 1. Authenticate user and fetch current balance
+        async function initializeTvModule() {
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
+            if (!user || error) {
+                window.location.href = "../login.html";
+                return;
+            }
+            
+            currentUser = user;
+
+            const { data: profile, error: profileError } = await supabase
+                .from('users')
+                .select('wallet_balance')
+                .eq('id', user.id)
+                .single();
+
+            if (profile) {
+                currentBalance = Number(profile.wallet_balance || 0);
+                document.getElementById("navBalance").textContent = `₦${currentBalance.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
+            }
+        }
+
+        initializeTvModule();
+
+        // 2. Form Submission Logic
+        const tvForm = document.getElementById("tvForm");
+        const submitBtn = document.getElementById("submitBtn");
+        const statusMsg = document.getElementById("statusMessage");
+
+        tvForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const packageSelect = document.getElementById("packageSelect");
+            const amountCost = Number(packageSelect.value);
+            const packageDesc = packageSelect.options[packageSelect.selectedIndex].getAttribute("data-desc");
+            const iucNumber = document.getElementById("iucInput").value;
+            const provider = document.querySelector('input[name="provider"]:checked').value;
+            
+            const fullDescription = `${packageDesc} | IUC: ${iucNumber}`;
+
+            // Executive Balance Check (Pre-flight)
+            if (currentBalance < amountCost) {
+                statusMsg.className = "px-6 pb-6 text-center text-sm font-bold text-red-600 block";
+                statusMsg.innerHTML = `Insufficient Funds. You need ₦${amountCost.toLocaleString()}, but your balance is ₦${currentBalance.toLocaleString()}. <br><a href="fund.html" class="text-blue-600 hover:underline mt-2 inline-block">Fund Wallet Here</a>`;
+                return;
+            }
+
+            // Lock UI - Phase 1: IUC Verification
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Verifying Decoder...
+            `;
+            statusMsg.className = "px-6 pb-6 text-center text-sm font-semibold text-purple-600 block";
+            statusMsg.textContent = `Validating ${provider} Smartcard Details...`;
+
+            // Simulate API Delay for IUC Verification
+            setTimeout(async () => {
+                
+                try {
+                    // Update UI to Activation Phase
+                    submitBtn.innerHTML = `
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Activating Package...
+                    `;
+
+                    // Step A: Double check current balance directly from DB
+                    const { data: dbProfile, error: fetchError } = await supabase
+                        .from('users')
+                        .select('wallet_balance')
+                        .eq('id', currentUser.id)
+                        .single();
+
+                    if (fetchError) throw fetchError;
+                    
+                    const verifiedBalance = Number(dbProfile.wallet_balance || 0);
+                    if (verifiedBalance < amountCost) {
+                        throw new Error("Insufficient wallet balance verified by server.");
+                    }
+
+                    // Step B: Deduct Balance
+                    const newBalance = verifiedBalance - amountCost;
+                    const { error: updateError } = await supabase
+                        .from('users')
+                        .update({ wallet_balance: newBalance })
+                        .eq('id', currentUser.id);
+
+                    if (updateError) throw updateError;
+
+                    // Step C: Log Transaction Receipt
+                    const { error: txError } = await supabase
+                        .from('transactions')
+                        .insert([{
+                            user_id: currentUser.id,
+                            service_type: 'cable_tv',
+                            description: fullDescription,
+                            amount: amountCost,
+                            status: 'success'
+                        }]);
+
+                    if (txError) throw txError;
+
+                    // Step D: Simulation of API Success
+                    submitBtn.classList.add("hidden");
+                    
+                    statusMsg.className = "px-6 pb-6 text-center block";
+                    statusMsg.innerHTML = `
+                        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
+                            <p class="text-xs font-bold text-emerald-800 uppercase tracking-widest mb-1">Activation Status</p>
+                            <p class="text-lg font-bold text-emerald-600 tracking-wider">SUCCESSFUL</p>
+                            <p class="text-[10px] text-gray-500 mt-1">Decoder should reflect viewing within 5 minutes. Keep decoder powered on.</p>
+                        </div>
+                        <p class="text-sm text-gray-600 font-semibold mb-3">₦${amountCost.toLocaleString()} deducted for ${packageDesc}.</p>
+                        <a href="../dashboard/customer.html" class="inline-block bg-primary text-white text-xs font-bold px-6 py-3 rounded-lg hover:bg-blue-900 transition">Return to Dashboard</a>
+                    `;
+
+                } catch (err) {
+                    console.error("TV Activation Error:", err);
+                    statusMsg.className = "px-6 pb-6 text-center text-sm font-bold text-red-600 block";
+                    statusMsg.textContent = "Activation Failed: " + err.message;
+                    
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = "<span>Activate Subscription</span>";
+                }
+
+            }, 2000); // 2 second API simulation delay
+        });
+
+        // Add visual radio button focus handlers
+        const radioLabels = document.querySelectorAll('label:has(input[type="radio"])');
+        const radios = document.querySelectorAll('input[type="radio"]');
+        
+        radios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                radioLabels.forEach(label => {
+                    label.classList.remove('ring-2', 'ring-offset-2', 'border-blue-500', 'border-green-500', 'border-orange-500');
+                });
+                
+                const activeLabel = radio.closest('label');
+                if(radio.value === 'DStv') activeLabel.classList.add('ring-2', 'ring-offset-2', 'border-blue-500');
+                if(radio.value === 'GOtv') activeLabel.classList.add('ring-2', 'ring-offset-2', 'border-green-500');
+                if(radio.value === 'Startimes') activeLabel.classList.add('ring-2', 'ring-offset-2', 'border-orange-500');
+            });
+        });
+        
+        // Trigger initial styling
+        document.querySelector('input[name="provider"]:checked').dispatchEvent(new Event('change'));
+    </script>
+</body>
+</html>
