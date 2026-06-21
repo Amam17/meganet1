@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MegaNet - Executive Control Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: { primary: '#0A192F', secondary: '#00C2FF', accent: '#22C55E', background: '#F0F4F8' }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex bg-background font-sans text-gray-800">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-primary text-white flex flex-col hidden md:flex shadow-2xl z-20">
+        <div class="h-20 flex items-center px-6 border-b border-white/10">
+            <span class="text-2xl font-bold tracking-wider text-secondary">MEGANET</span>
+            <span class="ml-2 text-[0.65rem] bg-red-500 text-white px-1.5 py-0.5 rounded font-bold tracking-widest uppercase">Admin</span>
+        </div>
+        <div class="flex-grow py-6 px-4 space-y-2">
+            <a href="#" class="flex items-center space-x-3 bg-white/10 text-white px-4 py-3 rounded-xl transition">
+                <span>📊</span> <span class="font-medium text-sm">Overview</span>
+            </a>
+            <a href="#" class="flex items-center space-x-3 hover:bg-white/5 text-gray-400 hover:text-white px-4 py-3 rounded-xl transition">
+                <span>👥</span> <span class="font-medium text-sm">User Management</span>
+            </a>
+            <a href="#" class="flex items-center space-x-3 hover:bg-white/5 text-gray-400 hover:text-white px-4 py-3 rounded-xl transition">
+                <span>🧾</span> <span class="font-medium text-sm">Global Ledger</span>
+            </a>
+            <a href="#" class="flex items-center space-x-3 hover:bg-white/5 text-gray-400 hover:text-white px-4 py-3 rounded-xl transition">
+                <span>⚙️</span> <span class="font-medium text-sm">Pricing Engine</span>
+            </a>
+        </div>
+        <div class="p-4 border-t border-white/10">
+            <button id="logoutBtn" class="w-full bg-red-600/20 text-red-500 hover:bg-red-600 hover:text-white text-sm font-bold py-3 rounded-xl transition">
+                Secure Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-grow flex flex-col h-screen overflow-y-auto">
+        
+        <!-- Top Header -->
+        <header class="h-20 bg-white border-b border-gray-200 flex items-center justify-between px-8 sticky top-0 z-10 shadow-sm">
+            <div>
+                <h1 class="text-xl font-bold text-primary">Executive Dashboard</h1>
+                <p class="text-xs text-gray-500">Live platform monitoring</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span id="adminName" class="text-sm font-bold text-gray-700 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">Authenticating...</span>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="p-8 space-y-8 max-w-7xl mx-auto w-full">
+            
+            <!-- Executive Metrics Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Total Users -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 flex items-center space-x-4">
+                    <div class="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center text-2xl">👥</div>
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Users</p>
+                        <h3 id="statUsers" class="text-3xl font-extrabold text-primary mt-1">...</h3>
+                    </div>
+                </div>
+
+                <!-- Platform Revenue (Sales) -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 flex items-center space-x-4">
+                    <div class="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center text-2xl">📈</div>
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Sales Volume</p>
+                        <h3 id="statSales" class="text-3xl font-extrabold text-emerald-600 mt-1">₦...</h3>
+                    </div>
+                </div>
+
+                <!-- Total Wallet Liabilities -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 flex items-center space-x-4">
+                    <div class="w-14 h-14 bg-purple-50 rounded-xl flex items-center justify-center text-2xl">🏦</div>
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">User Wallet Balances</p>
+                        <h3 id="statLiabilities" class="text-3xl font-extrabold text-purple-700 mt-1">₦...</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Recent Global Transactions -->
+                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col h-[500px]">
+                    <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-slate-50">
+                        <h3 class="text-sm font-bold text-primary uppercase tracking-wide">Live Transaction Stream</h3>
+                        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+                    </div>
+                    <div class="overflow-y-auto flex-grow p-0">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="sticky top-0 bg-white shadow-sm">
+                                <tr class="text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
+                                    <th class="p-4">Type</th>
+                                    <th class="p-4">Amount</th>
+                                    <th class="p-4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="globalTxTable" class="text-sm divide-y divide-gray-50">
+                                <tr><td colspan="3" class="p-8 text-center text-gray-400">Loading pipeline...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recent Registered Users -->
+                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col h-[500px]">
+                    <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-slate-50">
+                        <h3 class="text-sm font-bold text-primary uppercase tracking-wide">New Accounts</h3>
+                    </div>
+                    <div class="overflow-y-auto flex-grow p-0">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="sticky top-0 bg-white shadow-sm">
+                                <tr class="text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
+                                    <th class="p-4">User</th>
+                                    <th class="p-4">Contact</th>
+                                    <th class="p-4 text-right">Wallet</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTable" class="text-sm divide-y divide-gray-50">
+                                <tr><td colspan="3" class="p-8 text-center text-gray-400">Loading database...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Supabase Admin Controller -->
+    <script type="module">
+        import { supabase } from "../js/supabase-config.js";
+
+        async function initAdminDashboard() {
+            // 1. Verify Authentication & Admin Role
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
+            
+            if (!user || authError) {
+                window.location.href = "../login.html";
+                return;
+            }
+
+            // Verify if user is actually an admin
+            const { data: profile, error: profileError } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            if (profileError || profile.role !== 'admin') {
+                // Kick non-admins back to the customer dashboard
+                alert("ACCESS DENIED: Executive privileges required.");
+                window.location.href = "../dashboard/customer.html";
+                return;
+            }
+
+            document.getElementById("adminName").textContent = `CEO: ${profile.full_name}`;
+
+            // 2. Fetch Global Statistics
+            fetchUsersData();
+            fetchTransactionsData();
+        }
+
+        async function fetchUsersData() {
+            const { data: users, error } = await supabase
+                .from('users')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Error fetching users:", error);
+                return;
+            }
+
+            // Update User Count Stat
+            document.getElementById("statUsers").textContent = users.length;
+
+            // Calculate Total Wallet Liabilities (Sum of all balances)
+            const totalLiabilities = users.reduce((sum, user) => sum + Number(user.wallet_balance || 0), 0);
+            document.getElementById("statLiabilities").textContent = `₦${totalLiabilities.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
+
+            // Populate Users Table
+            const tbody = document.getElementById("usersTable");
+            tbody.innerHTML = "";
+            
+            users.slice(0, 15).forEach(u => {
+                const row = document.createElement("tr");
+                row.className = "hover:bg-slate-50 transition";
+                row.innerHTML = `
+                    <td class="p-4">
+                        <p class="font-bold text-gray-800">${u.full_name}</p>
+                        <p class="text-[10px] text-gray-400 font-mono">@${u.username}</p>
+                    </td>
+                    <td class="p-4">
+                        <p class="text-xs text-gray-600">${u.phone}</p>
+                        <p class="text-[10px] text-gray-400">${u.email}</p>
+                    </td>
+                    <td class="p-4 text-right font-bold text-primary">
+                        ₦${Number(u.wallet_balance || 0).toLocaleString()}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function fetchTransactionsData() {
+            const { data: txns, error } = await supabase
+                .from('transactions')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Error fetching transactions:", error);
+                return;
+            }
+
+            // Calculate Total Sales (Exclude Wallet Funding, sum only Data/Airtime/Electricity)
+            const totalSales = txns
+                .filter(t => t.status === 'success' && t.service_type !== 'wallet_funding' && t.service_type !== 'bank_transfer')
+                .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+            
+            document.getElementById("statSales").textContent = `₦${totalSales.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
+
+            // Populate Global Transactions Table
+            const tbody = document.getElementById("globalTxTable");
+            tbody.innerHTML = "";
+
+            txns.slice(0, 15).forEach(txn => {
+                const row = document.createElement("tr");
+                row.className = "hover:bg-slate-50 transition";
+                
+                let statusColor = txn.status === 'success' ? 'text-emerald-500' : 'text-amber-500';
+
+                row.innerHTML = `
+                    <td class="p-4">
+                        <p class="font-bold text-gray-800 text-xs capitalize">${txn.service_type}</p>
+                        <p class="text-[10px] text-gray-400 truncate max-w-[150px]">${txn.description}</p>
+                    </td>
+                    <td class="p-4 font-bold text-gray-900 text-xs">
+                        ₦${Number(txn.amount || 0).toLocaleString()}
+                    </td>
+                    <td class="p-4">
+                        <span class="text-[10px] font-bold uppercase tracking-wider ${statusColor}">${txn.status}</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Handle Logout
+        document.getElementById("logoutBtn").addEventListener("click", async () => {
+            await supabase.auth.signOut();
+            window.location.href = "../login.html";
+        });
+
+        // Initialize
+        initAdminDashboard();
+    </script>
+</body>
+</html>
