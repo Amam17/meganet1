@@ -6,8 +6,6 @@
     <title>MegaNet - Fund Wallet</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Paystack Inline JS -->
-    <script src="https://js.paystack.co/v1/inline.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -36,50 +34,71 @@
             <!-- Header Section -->
             <div class="bg-emerald-50 p-6 text-center border-b border-emerald-100">
                 <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl shadow-sm">
-                    💰
+                    🏦
                 </div>
-                <h2 class="text-2xl font-bold text-gray-800">Fund Wallet</h2>
-                <p class="text-sm text-gray-500 mt-1">Add money securely via Paystack</p>
+                <h2 class="text-2xl font-bold text-gray-800">Automated Funding</h2>
+                <p class="text-sm text-gray-500 mt-1">Transfer to your dedicated account</p>
             </div>
 
-            <!-- Funding Form -->
-            <form id="fundForm" class="p-6 space-y-5">
+            <!-- Dedicated Account Display -->
+            <div class="p-6">
+                <p class="text-xs text-center text-gray-500 font-medium mb-5 uppercase tracking-wide">Your Permanent Account Details</p>
                 
-                <div>
-                    <label for="amount" class="block text-sm font-semibold text-gray-700 mb-1">Enter Amount (₦)</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <span class="text-gray-500 font-bold">₦</span>
-                        </div>
-                        <input id="amount" type="number" min="100" max="500000" placeholder="1000" class="w-full pl-10 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition outline-none text-gray-800 font-bold text-lg" required>
+                <div class="bg-primary rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                    <!-- Decorative background pattern -->
+                    <div class="absolute top-0 right-0 opacity-10">
+                        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                     </div>
-                    <p class="text-xs text-gray-400 mt-2">Minimum deposit: ₦100</p>
+
+                    <div class="relative z-10 space-y-4">
+                        <div>
+                            <p class="text-xs text-secondary font-semibold uppercase tracking-wider mb-1">Bank Name</p>
+                            <p class="text-lg font-bold">Moniepoint MFB</p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-xs text-secondary font-semibold uppercase tracking-wider mb-1">Account Number</p>
+                            <div class="flex items-center justify-between bg-white/10 rounded-lg p-3 border border-white/20">
+                                <p id="accNumber" class="text-2xl font-mono font-bold tracking-widest">Generating...</p>
+                                <button id="copyBtn" class="text-xs bg-secondary text-primary px-3 py-1.5 rounded font-bold hover:bg-white transition shadow">COPY</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="text-xs text-secondary font-semibold uppercase tracking-wider mb-1">Account Name</p>
+                            <p id="accName" class="text-sm font-medium uppercase tracking-wide">Loading...</p>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Hidden inputs to hold user data securely -->
-                <input type="hidden" id="userEmail" value="">
-                <input type="hidden" id="userId" value="">
+                <div class="mt-5 bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start space-x-3">
+                    <div class="text-blue-500 mt-0.5">ℹ️</div>
+                    <div class="text-xs text-gray-600 leading-relaxed">
+                        Transfers made to this account number will automatically credit your MegaNet wallet within <strong>1-2 minutes</strong>. Minimum transfer is ₦100.
+                    </div>
+                </div>
 
-                <button type="submit" id="payBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold shadow-lg transition duration-200 mt-2 flex justify-center items-center uppercase tracking-wide text-sm">
-                    <span>Pay with Paystack</span>
-                </button>
+                <!-- Simulation Trigger for CEO Testing -->
+                <div class="mt-8 pt-6 border-t border-gray-100">
+                    <p class="text-xs text-center text-gray-400 mb-3 uppercase tracking-wide">Developer Testing Zone</p>
+                    <button id="simulateBtn" class="w-full bg-gray-800 hover:bg-black text-white py-3 rounded-xl font-bold shadow transition duration-200 flex justify-center items-center text-sm">
+                        <span>Simulate ₦5,000 Transfer</span>
+                    </button>
+                    <div id="statusMsg" class="hidden mt-3 text-center text-sm font-semibold"></div>
+                </div>
 
-            </form>
-
-            <!-- Status Message -->
-            <div id="statusMsg" class="hidden px-6 pb-6 text-center text-sm font-semibold"></div>
+            </div>
         </div>
 
     </main>
 
-    <!-- Supabase & Paystack Controller Script -->
+    <!-- Supabase Controller Script -->
     <script type="module">
         import { supabase } from "../js/supabase-config.js";
 
-        // Paystack Test Public Key (TODO: Replace with your actual Paystack Public Key)
-        const PAYSTACK_PUBLIC_KEY = "pk_test_YOUR_PAYSTACK_KEY_HERE"; 
+        let currentUserId = null;
 
-        // 1. Authenticate user and prepopulate hidden fields
+        // 1. Authenticate user and fetch profile for Dedicated Account UI
         async function initializeFunding() {
             const { data: { user }, error } = await supabase.auth.getUser();
             
@@ -87,68 +106,62 @@
                 window.location.href = "../login.html";
                 return;
             }
+            
+            currentUserId = user.id;
 
-            document.getElementById("userEmail").value = user.email;
-            document.getElementById("userId").value = user.id;
+            // Fetch profile to personalize the account name
+            const { data: profile, error: profileError } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            if (profile) {
+                document.getElementById("accName").textContent = `MegaNet - ${profile.full_name}`;
+                
+                // Generate a mock account number using the last 10 digits of their phone, or a fallback
+                let phoneStr = profile.phone ? profile.phone.replace(/\D/g,'') : "08012345678";
+                let mockAccNo = phoneStr.length >= 10 ? phoneStr.substring(phoneStr.length - 10) : "8012345678";
+                document.getElementById("accNumber").textContent = mockAccNo;
+            }
         }
 
         initializeFunding();
 
-        // 2. Handle form submission
-        const fundForm = document.getElementById("fundForm");
-        const payBtn = document.getElementById("payBtn");
-        const statusMsg = document.getElementById("statusMsg");
-
-        fundForm.addEventListener("submit", (e) => {
-            e.preventDefault();
-
-            const amount = document.getElementById("amount").value;
-            const email = document.getElementById("userEmail").value;
-            const userId = document.getElementById("userId").value;
-
-            if (PAYSTACK_PUBLIC_KEY === "pk_test_YOUR_PAYSTACK_KEY_HERE") {
-                alert("Mr. CEO: You need to insert your Paystack Public Key in the code to run real tests. For now, we will simulate a successful payment!");
-                processSuccessfulPayment(amount, userId, "simulated_ref_12345");
-                return;
-            }
-
-            // Launch Paystack Popup
-            let handler = PaystackPop.setup({
-                key: PAYSTACK_PUBLIC_KEY,
-                email: email,
-                amount: amount * 100, // Paystack calculates in kobo
-                currency: 'NGN',
-                ref: 'MGN_' + Math.floor((Math.random() * 1000000000) + 1), // Generate random reference
-                callback: function(response) {
-                    // Payment successful
-                    processSuccessfulPayment(amount, userId, response.reference);
-                },
-                onClose: function() {
-                    statusMsg.className = "px-6 pb-6 text-center text-sm font-bold text-amber-600";
-                    statusMsg.textContent = "Payment window closed.";
-                    statusMsg.classList.remove("hidden");
-                }
-            });
-
-            handler.openIframe();
+        // 2. Handle Copy Button
+        document.getElementById("copyBtn").addEventListener("click", () => {
+            const accNum = document.getElementById("accNumber").textContent;
+            navigator.clipboard.writeText(accNum);
+            
+            const btn = document.getElementById("copyBtn");
+            btn.textContent = "COPIED!";
+            btn.classList.add("bg-white", "text-primary");
+            setTimeout(() => {
+                btn.textContent = "COPY";
+                btn.classList.remove("bg-white", "text-primary");
+            }, 2000);
         });
 
-        // 3. Process the backend update after payment
-        async function processSuccessfulPayment(amountPaid, uid, reference) {
-            payBtn.disabled = true;
-            payBtn.textContent = "Updating Wallet...";
-            statusMsg.className = "hidden text-center text-sm font-semibold text-gray-500";
-            statusMsg.textContent = "Securing funds in vault...";
-            statusMsg.classList.remove("hidden");
+        // 3. Process the simulated backend update (Testing Only)
+        const simulateBtn = document.getElementById("simulateBtn");
+        const statusMsg = document.getElementById("statusMsg");
 
-            const numAmount = Number(amountPaid);
+        simulateBtn.addEventListener("click", async () => {
+            if (!currentUserId) return;
+            
+            simulateBtn.disabled = true;
+            simulateBtn.textContent = "Processing Bank Webhook...";
+            statusMsg.className = "text-center text-sm font-semibold text-gray-500 block";
+            statusMsg.textContent = "Receiving transfer signal...";
+
+            const numAmount = 5000; // Simulated amount
 
             try {
                 // Step A: Fetch current balance
                 const { data: profile, error: fetchError } = await supabase
                     .from('users')
                     .select('wallet_balance')
-                    .eq('id', uid)
+                    .eq('id', currentUserId)
                     .single();
 
                 if (fetchError) throw fetchError;
@@ -160,7 +173,7 @@
                 const { error: updateError } = await supabase
                     .from('users')
                     .update({ wallet_balance: newBalance })
-                    .eq('id', uid);
+                    .eq('id', currentUserId);
 
                 if (updateError) throw updateError;
 
@@ -168,9 +181,9 @@
                 const { error: txError } = await supabase
                     .from('transactions')
                     .insert([{
-                        user_id: uid,
-                        service_type: 'wallet_funding',
-                        description: `Paystack Deposit (Ref: ${reference})`,
+                        user_id: currentUserId,
+                        service_type: 'bank_transfer',
+                        description: `Moniepoint Transfer Received`,
                         amount: numAmount,
                         status: 'success'
                     }]);
@@ -178,8 +191,8 @@
                 if (txError) throw txError;
 
                 // Success Message & Redirect
-                statusMsg.className = "px-6 pb-6 text-center text-sm font-bold text-emerald-600";
-                statusMsg.textContent = `Successfully funded ₦${numAmount}! Redirecting to dashboard...`;
+                statusMsg.className = "text-center text-sm font-bold text-emerald-600 block";
+                statusMsg.textContent = `Success! ₦${numAmount} credited. Redirecting...`;
                 
                 setTimeout(() => {
                     window.location.href = "../dashboard/customer.html";
@@ -187,10 +200,12 @@
 
             } catch (err) {
                 console.error("Funding Error:", err);
-                statusMsg.className = "px-6 pb-6 text-center text-sm font-bold text-red-600";
+                statusMsg.className = "text-center text-sm font-bold text-red-600 block";
                 statusMsg.textContent = "Database Error: " + err.message;
+                simulateBtn.disabled = false;
+                simulateBtn.textContent = "Simulate ₦5,000 Transfer";
             }
-        }
+        });
     </script>
 </body>
 </html>
