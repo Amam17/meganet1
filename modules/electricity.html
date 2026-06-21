@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MegaNet - Buy Electricity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: { primary: '#0F2D52', secondary: '#00C2FF', accent: '#22C55E', background: '#F8FAFC' }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col bg-background font-sans text-gray-800">
+
+    <!-- Top Navigation -->
+    <nav class="bg-primary text-white px-6 py-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center space-x-3">
+            <span class="text-2xl font-bold tracking-wider text-secondary">MEGANET</span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="hidden sm:block text-xs text-right bg-blue-900 px-3 py-1.5 rounded-lg border border-blue-800">
+                <span class="text-gray-400 block" style="font-size: 0.65rem;">AVAILABLE BALANCE</span>
+                <span id="navBalance" class="font-bold text-secondary">₦0.00</span>
+            </div>
+            <a href="../dashboard/customer.html" class="bg-white/10 hover:bg-white/20 text-white text-xs px-4 py-2 rounded-lg font-bold transition duration-200">← Dashboard</a>
+        </div>
+    </nav>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-grow flex items-center justify-center p-4 md:p-8">
+        
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+            
+            <!-- Header Section -->
+            <div class="bg-amber-50 p-6 text-center border-b border-amber-100">
+                <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl shadow-sm">
+                    ⚡
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Pay Electricity</h2>
+                <p class="text-sm text-gray-500 mt-1">Instant token generation across Nigeria</p>
+            </div>
+
+            <!-- Procurement Form -->
+            <form id="electricityForm" class="p-6 space-y-5">
+                
+                <!-- Disco Selection -->
+                <div>
+                    <label for="discoSelect" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Select Provider (Disco)</label>
+                    <select id="discoSelect" class="w-full bg-slate-50 border border-gray-200 p-3.5 rounded-xl font-medium text-gray-800 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition" required>
+                        <option value="" disabled selected>Select an electricity provider...</option>
+                        <option value="KEDCO">Kano Electricity (KEDCO)</option>
+                        <option value="AEDC">Abuja Electricity (AEDC)</option>
+                        <option value="IKEDC">Ikeja Electricity (IKEDC)</option>
+                        <option value="EKEDC">Eko Electricity (EKEDC)</option>
+                        <option value="JEDC">Jos Electricity (JEDC)</option>
+                        <option value="KEDCO_KAD">Kaduna Electricity (KAEDCO)</option>
+                    </select>
+                </div>
+
+                <!-- Meter Type -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Meter Type</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="border-2 border-gray-200 rounded-xl p-3 flex items-center cursor-pointer hover:bg-slate-50 transition focus-within:border-amber-500 bg-white">
+                            <input type="radio" name="meterType" value="Prepaid" class="mr-2 text-amber-500 focus:ring-amber-500" required checked>
+                            <span class="text-sm font-bold text-gray-800">Prepaid</span>
+                        </label>
+                        <label class="border-2 border-gray-200 rounded-xl p-3 flex items-center cursor-pointer hover:bg-slate-50 transition focus-within:border-amber-500 bg-white">
+                            <input type="radio" name="meterType" value="Postpaid" class="mr-2 text-amber-500 focus:ring-amber-500">
+                            <span class="text-sm font-bold text-gray-800">Postpaid</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Meter Number -->
+                <div>
+                    <label for="meterInput" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Meter Number</label>
+                    <input id="meterInput" type="text" placeholder="e.g. 14325678901" minlength="10" class="w-full bg-slate-50 border border-gray-200 p-3.5 rounded-xl font-mono tracking-widest text-gray-800 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition" required>
+                </div>
+
+                <!-- Amount Selection -->
+                <div>
+                    <label for="amountInput" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Amount (₦)</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <span class="text-gray-500 font-bold">₦</span>
+                        </div>
+                        <input id="amountInput" type="number" min="500" max="100000" placeholder="1000" class="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition outline-none text-gray-800 font-bold text-lg" required>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">Min: ₦500 | Max: ₦100,000</p>
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full bg-primary hover:bg-blue-900 text-white py-4 rounded-xl font-bold shadow-lg transition duration-200 mt-4 flex justify-center items-center uppercase tracking-wide text-sm">
+                    <span>Generate Token</span>
+                </button>
+
+            </form>
+
+            <!-- Status & Receipt Message -->
+            <div id="statusMessage" class="hidden px-6 pb-6 text-center text-sm font-semibold"></div>
+
+        </div>
+    </main>
+
+    <!-- Supabase Execution Engine -->
+    <script type="module">
+        import { supabase } from "../js/supabase-config.js";
+
+        let currentUser = null;
+        let currentBalance = 0;
+
+        // 1. Authenticate user and fetch current balance
+        async function initializeElectricityModule() {
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
+            if (!user || error) {
+                window.location.href = "../login.html";
+                return;
+            }
+            
+            currentUser = user;
+
+            const { data: profile, error: profileError } = await supabase
+                .from('users')
+                .select('wallet_balance')
+                .eq('id', user.id)
+                .single();
+
+            if (profile) {
+                currentBalance = Number(profile.wallet_balance || 0);
+                document.getElementById("navBalance").textContent = `₦${currentBalance.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
+            }
+        }
+
+        initializeElectricityModule();
+
+        // 2. Form Submission Logic
+        const electricityForm = document.getElementById("electricityForm");
+        const submitBtn = document.getElementById("submitBtn");
+        const statusMsg = document.getElementById("statusMessage");
+
+        electricityForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const amountCost = Number(document.getElementById("amountInput").value);
+            const meterNumber = document.getElementById("meterInput").value;
+            const disco = document.getElementById("discoSelect").value;
+            const meterType = document.querySelector('input[name="meterType"]:checked').value;
+            
+            const fullDescription = `${disco} ${meterType} - Meter: ${meterNumber}`;
+
+            // Executive Balance Check (Pre-flight)
+            if (currentBalance < amountCost) {
+                statusMsg.className = "px-6 pb-6 text-center text-sm font-bold text-red-600 block";
+                statusMsg.innerHTML = `Insufficient Funds. You need ₦${amountCost.toLocaleString()}, but your balance is ₦${currentBalance.toLocaleString()}. <br><a href="fund.html" class="text-blue-600 hover:underline mt-2 inline-block">Fund Wallet Here</a>`;
+                return;
+            }
+
+            // Lock UI - Phase 1: Verification
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Verifying Meter...
+            `;
+            statusMsg.className = "px-6 pb-6 text-center text-sm font-semibold text-amber-600 block";
+            statusMsg.textContent = "Connecting to Disco API...";
+
+            // Simulate API Delay for Meter Verification
+            setTimeout(async () => {
+                
+                try {
+                    // Update UI to Payment Processing
+                    submitBtn.innerHTML = `
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Securing Token...
+                    `;
+
+                    // Step A: Double check current balance directly from DB
+                    const { data: dbProfile, error: fetchError } = await supabase
+                        .from('users')
+                        .select('wallet_balance')
+                        .eq('id', currentUser.id)
+                        .single();
+
+                    if (fetchError) throw fetchError;
+                    
+                    const verifiedBalance = Number(dbProfile.wallet_balance || 0);
+                    if (verifiedBalance < amountCost) {
+                        throw new Error("Insufficient wallet balance verified by server.");
+                    }
+
+                    // Step B: Deduct Balance
+                    const newBalance = verifiedBalance - amountCost;
+                    const { error: updateError } = await supabase
+                        .from('users')
+                        .update({ wallet_balance: newBalance })
+                        .eq('id', currentUser.id);
+
+                    if (updateError) throw updateError;
+
+                    // Generate Mock 20-Digit Electricity Token
+                    const mockToken = Array.from({length: 20}, () => Math.floor(Math.random() * 10)).join('').match(/.{1,4}/g).join('-');
+
+                    // Step C: Log Transaction Receipt
+                    const { error: txError } = await supabase
+                        .from('transactions')
+                        .insert([{
+                            user_id: currentUser.id,
+                            service_type: 'electricity',
+                            description: `${fullDescription} | Token: ${mockToken}`,
+                            amount: amountCost,
+                            status: 'success'
+                        }]);
+
+                    if (txError) throw txError;
+
+                    // Step D: Simulation of API Success and Token Display
+                    submitBtn.classList.add("hidden");
+                    
+                    statusMsg.className = "px-6 pb-6 text-center block";
+                    statusMsg.innerHTML = `
+                        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
+                            <p class="text-xs font-bold text-emerald-800 uppercase tracking-widest mb-1">Your Token</p>
+                            <p class="text-lg font-mono font-bold text-emerald-600 tracking-wider">${mockToken}</p>
+                            <p class="text-[10px] text-gray-500 mt-2">Units: ${Math.floor(amountCost / 65)} kWh | Name: MegaNet Customer</p>
+                        </div>
+                        <p class="text-sm text-gray-600 font-semibold mb-3">Payment Successful. ₦${amountCost.toLocaleString()} deducted.</p>
+                        <a href="../dashboard/customer.html" class="inline-block bg-primary text-white text-xs font-bold px-6 py-3 rounded-lg hover:bg-blue-900 transition">Return to Dashboard</a>
+                    `;
+
+                } catch (err) {
+                    console.error("Electricity Execution Error:", err);
+                    statusMsg.className = "px-6 pb-6 text-center text-sm font-bold text-red-600 block";
+                    statusMsg.textContent = "Transaction Failed: " + err.message;
+                    
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = "<span>Generate Token</span>";
+                }
+
+            }, 1500); // 1.5 second API simulation delay
+        });
+
+        // Add visual radio button focus handlers
+        const radioLabels = document.querySelectorAll('label:has(input[type="radio"])');
+        const radios = document.querySelectorAll('input[type="radio"]');
+        
+        radios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                radioLabels.forEach(label => label.classList.remove('ring-2', 'ring-offset-2', 'border-amber-500'));
+                radio.closest('label').classList.add('ring-2', 'ring-offset-2', 'border-amber-500');
+            });
+        });
+    </script>
+</body>
+</html>
