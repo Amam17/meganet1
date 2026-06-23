@@ -171,45 +171,14 @@
             statusMsg.textContent = "Connecting to telecom dispatch channels...";
 
             try {
-                // IMPORTANT: In a real production environment with high traffic, 
-                // this balance deduction should be handled by a Postgres RPC function 
-                // to prevent race conditions. For this phase, client-side RLS logic is sufficient.
+                // THE SECURE EXECUTIVE UPGRADE: Call the Postgres RPC
+                const { data: rpcData, error: rpcError } = await supabase.rpc('process_vtu_transaction', {
+                    p_amount: amountCost,
+                    p_service_type: 'data',
+                    p_description: fullDescription
+                });
 
-                // Step A: Double check current balance directly from DB just in case
-                const { data: dbProfile, error: fetchError } = await supabase
-                    .from('users')
-                    .select('wallet_balance')
-                    .eq('id', currentUser.id)
-                    .single();
-
-                if (fetchError) throw fetchError;
-                
-                const verifiedBalance = Number(dbProfile.wallet_balance || 0);
-                if (verifiedBalance < amountCost) {
-                    throw new Error("Insufficient wallet balance verified by server.");
-                }
-
-                // Step B: Deduct Balance
-                const newBalance = verifiedBalance - amountCost;
-                const { error: updateError } = await supabase
-                    .from('users')
-                    .update({ wallet_balance: newBalance })
-                    .eq('id', currentUser.id);
-
-                if (updateError) throw updateError;
-
-                // Step C: Log Transaction Receipt
-                const { error: txError } = await supabase
-                    .from('transactions')
-                    .insert([{
-                        user_id: currentUser.id,
-                        service_type: 'data',
-                        description: fullDescription,
-                        amount: amountCost,
-                        status: 'success'
-                    }]);
-
-                if (txError) throw txError;
+                if (rpcError) throw rpcError;
 
                 // Step D: Simulation of VTpass/ConnectBridge API Success
                 statusMsg.className = "px-6 pb-6 text-center text-sm font-bold text-emerald-600 block";
