@@ -169,42 +169,27 @@
             statusMsg.className = "px-6 pb-6 text-center text-sm font-semibold text-gray-500 block";
             statusMsg.textContent = "Connecting to telecom dispatch channels...";
 
-            try {
-                // Step A: Double check current balance directly from DB just in case
-                const { data: dbProfile, error: fetchError } = await supabase
-                    .from('users')
-                    .select('wallet_balance')
-                    .eq('id', currentUser.id)
-                    .single();
+              try {
+                // THE SECURE EXECUTIVE UPGRADE: Call the Postgres RPC
+                const { data: rpcData, error: rpcError } = await supabase.rpc('process_vtu_transaction', {
+                    p_amount: amountCost,
+                    p_service_type: 'data',
+                    p_description: fullDescription
+                });
 
-                if (fetchError) throw fetchError;
+                if (rpcError) throw rpcError;
+
+                // Step D: Simulation of VTpass/ConnectBridge API Success
+                statusMsg.className = "px-6 pb-6 text-center text-sm font-bold text-emerald-600 block";
+                statusMsg.innerHTML = `Data Provisioning Successful!<br><span class="font-normal text-xs text-gray-500">₦${amountCost} has been deducted from your wallet.</span>`;
                 
-                const verifiedBalance = Number(dbProfile.wallet_balance || 0);
-                if (verifiedBalance < amountCost) {
-                    throw new Error("Insufficient wallet balance verified by server.");
-                }
+                // Route back to dashboard after 3 seconds
+                setTimeout(() => {
+                    window.location.href = "../dashboard/customer.html";
+                }, 3000);
 
-                // Step B: Deduct Balance
-                const newBalance = verifiedBalance - amountCost;
-                const { error: updateError } = await supabase
-                    .from('users')
-                    .update({ wallet_balance: newBalance })
-                    .eq('id', currentUser.id);
-
-                if (updateError) throw updateError;
-
-                // Step C: Log Transaction Receipt
-                const { error: txError } = await supabase
-                    .from('transactions')
-                    .insert([{
-                        user_id: currentUser.id,
-                        service_type: 'airtime',
-                        description: fullDescription,
-                        amount: amountCost,
-                        status: 'success'
-                    }]);
-
-                if (txError) throw txError;
+            }
+                catch (err) {
 
                 // Step D: Simulation of API Success
                 statusMsg.className = "px-6 pb-6 text-center text-sm font-bold text-emerald-600 block";
