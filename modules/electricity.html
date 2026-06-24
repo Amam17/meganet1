@@ -60,7 +60,7 @@
                         <option value="IKEDC">Ikeja Electricity (IKEDC)</option>
                         <option value="EKEDC">Eko Electricity (EKEDC)</option>
                         <option value="JEDC">Jos Electricity (JEDC)</option>
-                        <option value="KEDCO_KAD">Kaduna Electricity (KAEDCO)</option>
+                        <option value="KAEDCO">Kaduna Electricity (KAEDCO)</option>
                     </select>
                 </div>
 
@@ -68,11 +68,11 @@
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Meter Type</label>
                     <div class="grid grid-cols-2 gap-3">
-                        <label class="border-2 border-gray-200 rounded-xl p-3 flex items-center cursor-pointer hover:bg-slate-50 transition focus-within:border-amber-500 bg-white">
+                        <label class="border-2 border-amber-500 ring-2 ring-offset-2 rounded-xl p-3 flex items-center cursor-pointer hover:bg-slate-50 transition bg-white radio-label">
                             <input type="radio" name="meterType" value="Prepaid" class="mr-2 text-amber-500 focus:ring-amber-500" required checked>
                             <span class="text-sm font-bold text-gray-800">Prepaid</span>
                         </label>
-                        <label class="border-2 border-gray-200 rounded-xl p-3 flex items-center cursor-pointer hover:bg-slate-50 transition focus-within:border-amber-500 bg-white">
+                        <label class="border-2 border-transparent rounded-xl p-3 flex items-center cursor-pointer hover:bg-slate-50 transition bg-white radio-label">
                             <input type="radio" name="meterType" value="Postpaid" class="mr-2 text-amber-500 focus:ring-amber-500">
                             <span class="text-sm font-bold text-gray-800">Postpaid</span>
                         </label>
@@ -109,14 +109,36 @@
         </div>
     </main>
 
+    <!-- SECURITY PIN MODAL (Hidden by default) -->
+    <div id="pinModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl transform transition-all">
+            <div class="text-center mb-5">
+                <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">🔐</div>
+                <h3 class="text-xl font-bold text-gray-800">Authorize Payment</h3>
+                <p class="text-xs text-gray-500 mt-1">Please enter your 4-digit transaction PIN to confirm this top-up.</p>
+            </div>
+            <div class="space-y-4">
+                <input id="transactionPin" type="password" maxlength="4" pattern="[0-9]{4}" placeholder="••••" class="w-full bg-slate-50 border border-gray-200 p-4 rounded-xl font-mono text-center text-3xl tracking-[0.5em] focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500 transition" autocomplete="off">
+                <div id="pinError" class="text-xs font-bold text-red-500 text-center hidden">Incorrect PIN. Please try again.</div>
+                
+                <div class="flex space-x-3 pt-2">
+                    <button id="cancelPinBtn" class="w-1/2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-bold transition text-sm">Cancel</button>
+                    <button id="confirmPinBtn" class="w-1/2 bg-primary hover:bg-blue-900 text-white py-3 rounded-xl font-bold shadow-lg transition text-sm">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Supabase Execution Engine -->
     <script type="module">
         import { supabase } from "../js/supabase-config.js";
 
         let currentUser = null;
         let currentBalance = 0;
+        let userPin = null;
+        let pendingTransaction = null;
 
-        // 1. Authenticate user and fetch current balance
+        // 1. Authenticate user and fetch current balance & PIN
         async function initializeElectricityModule() {
             const { data: { user }, error } = await supabase.auth.getUser();
             
@@ -129,24 +151,32 @@
 
             const { data: profile, error: profileError } = await supabase
                 .from('users')
-                .select('wallet_balance')
+                .select('wallet_balance, transaction_pin')
                 .eq('id', user.id)
                 .single();
 
             if (profile) {
                 currentBalance = Number(profile.wallet_balance || 0);
+                userPin = profile.transaction_pin;
                 document.getElementById("navBalance").textContent = `₦${currentBalance.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
             }
         }
 
         initializeElectricityModule();
 
-        // 2. Form Submission Logic
+        // 2. Form Submission Logic (Intercept for PIN)
         const electricityForm = document.getElementById("electricityForm");
         const submitBtn = document.getElementById("submitBtn");
         const statusMsg = document.getElementById("statusMessage");
 
-        electricityForm.addEventListener("submit", async (e) => {
+        // PIN Modal Elements
+        const pinModal = document.getElementById("pinModal");
+        const transactionPinInput = document.getElementById("transactionPin");
+        const pinError = document.getElementById("pinError");
+        const cancelPinBtn = document.getElementById("cancelPinBtn");
+        const confirmPinBtn = document.getElementById("confirmPinBtn");
+
+        electricityForm.addEventListener("submit", (e) => {
             e.preventDefault();
             if (!currentUser) return;
 
@@ -157,12 +187,47 @@
             
             const fullDescription = `${disco} ${meterType} - Meter: ${meterNumber}`;
 
-            // Executive Balance Check (Pre-flight)
+            // Executive Balance Check
             if (currentBalance < amountCost) {
                 statusMsg.className = "px-6 pb-6 text-center text-sm font-bold text-red-600 block";
                 statusMsg.innerHTML = `Insufficient Funds. You need ₦${amountCost.toLocaleString()}, but your balance is ₦${currentBalance.toLocaleString()}. <br><a href="fund.html" class="text-blue-600 hover:underline mt-2 inline-block">Fund Wallet Here</a>`;
                 return;
             }
+
+            // Security Check: Does user have a PIN?
+            if (!userPin) {
+                statusMsg.className = "px-6 pb-6 text-center text-sm font-bold text-amber-600 block";
+                statusMsg.innerHTML = `You must set up a Transaction PIN before buying electricity. <br><a href="../dashboard/settings.html" class="text-blue-600 hover:underline mt-2 inline-block">Set PIN Now</a>`;
+                return;
+            }
+
+            // Store transaction data and show PIN Modal
+            pendingTransaction = { amountCost, fullDescription };
+            pinModal.classList.remove("hidden");
+            transactionPinInput.value = "";
+            pinError.classList.add("hidden");
+            transactionPinInput.focus();
+        });
+
+        // 3. Handle Cancel PIN
+        cancelPinBtn.addEventListener("click", () => {
+            pinModal.classList.add("hidden");
+            pendingTransaction = null;
+        });
+
+        // 4. Handle Confirm PIN and Execute
+        confirmPinBtn.addEventListener("click", async () => {
+            const enteredPin = transactionPinInput.value;
+
+            // Verify PIN matches
+            if (enteredPin !== userPin) {
+                pinError.classList.remove("hidden");
+                return;
+            }
+
+            // PIN is correct! Hide modal and process
+            pinModal.classList.add("hidden");
+            pinError.classList.add("hidden");
 
             // Lock UI - Phase 1: Verification
             submitBtn.disabled = true;
@@ -178,7 +243,6 @@
 
             // Simulate API Delay for Meter Verification
             setTimeout(async () => {
-                
                 try {
                     // Update UI to Payment Processing
                     submitBtn.innerHTML = `
@@ -189,44 +253,18 @@
                         Securing Token...
                     `;
 
-                    // Step A: Double check current balance directly from DB
-                    const { data: dbProfile, error: fetchError } = await supabase
-                        .from('users')
-                        .select('wallet_balance')
-                        .eq('id', currentUser.id)
-                        .single();
-
-                    if (fetchError) throw fetchError;
-                    
-                    const verifiedBalance = Number(dbProfile.wallet_balance || 0);
-                    if (verifiedBalance < amountCost) {
-                        throw new Error("Insufficient wallet balance verified by server.");
-                    }
-
-                    // Step B: Deduct Balance
-                    const newBalance = verifiedBalance - amountCost;
-                    const { error: updateError } = await supabase
-                        .from('users')
-                        .update({ wallet_balance: newBalance })
-                        .eq('id', currentUser.id);
-
-                    if (updateError) throw updateError;
-
                     // Generate Mock 20-Digit Electricity Token
                     const mockToken = Array.from({length: 20}, () => Math.floor(Math.random() * 10)).join('').match(/.{1,4}/g).join('-');
+                    const finalDescription = `${pendingTransaction.fullDescription} | Token: ${mockToken}`;
 
-                    // Step C: Log Transaction Receipt
-                    const { error: txError } = await supabase
-                        .from('transactions')
-                        .insert([{
-                            user_id: currentUser.id,
-                            service_type: 'electricity',
-                            description: `${fullDescription} | Token: ${mockToken}`,
-                            amount: amountCost,
-                            status: 'success'
-                        }]);
+                    // THE SECURE EXECUTIVE UPGRADE: Call the Postgres RPC
+                    const { data: rpcData, error: rpcError } = await supabase.rpc('process_vtu_transaction', {
+                        p_amount: pendingTransaction.amountCost,
+                        p_service_type: 'electricity',
+                        p_description: finalDescription
+                    });
 
-                    if (txError) throw txError;
+                    if (rpcError) throw rpcError;
 
                     // Step D: Simulation of API Success and Token Display
                     submitBtn.classList.add("hidden");
@@ -236,9 +274,9 @@
                         <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4">
                             <p class="text-xs font-bold text-emerald-800 uppercase tracking-widest mb-1">Your Token</p>
                             <p class="text-lg font-mono font-bold text-emerald-600 tracking-wider">${mockToken}</p>
-                            <p class="text-[10px] text-gray-500 mt-2">Units: ${Math.floor(amountCost / 65)} kWh | Name: MegaNet Customer</p>
+                            <p class="text-[10px] text-gray-500 mt-2">Units: ${Math.floor(pendingTransaction.amountCost / 65)} kWh | Name: MegaNet Customer</p>
                         </div>
-                        <p class="text-sm text-gray-600 font-semibold mb-3">Payment Successful. ₦${amountCost.toLocaleString()} deducted.</p>
+                        <p class="text-sm text-gray-600 font-semibold mb-3">Payment Successful. ₦${pendingTransaction.amountCost.toLocaleString()} deducted.</p>
                         <a href="../dashboard/customer.html" class="inline-block bg-primary text-white text-xs font-bold px-6 py-3 rounded-lg hover:bg-blue-900 transition">Return to Dashboard</a>
                     `;
 
@@ -255,13 +293,18 @@
         });
 
         // Add visual radio button focus handlers
-        const radioLabels = document.querySelectorAll('label:has(input[type="radio"])');
+        const radioLabels = document.querySelectorAll('.radio-label');
         const radios = document.querySelectorAll('input[type="radio"]');
         
         radios.forEach(radio => {
             radio.addEventListener('change', () => {
-                radioLabels.forEach(label => label.classList.remove('ring-2', 'ring-offset-2', 'border-amber-500'));
-                radio.closest('label').classList.add('ring-2', 'ring-offset-2', 'border-amber-500');
+                radioLabels.forEach(label => {
+                    label.classList.remove('border-amber-500', 'ring-2', 'ring-offset-2');
+                    label.classList.add('border-transparent');
+                });
+                const activeLabel = radio.closest('label');
+                activeLabel.classList.remove('border-transparent');
+                activeLabel.classList.add('border-amber-500', 'ring-2', 'ring-offset-2');
             });
         });
     </script>
