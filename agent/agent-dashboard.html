@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MegaNet - Agent Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: { primary: '#1E1B4B', secondary: '#8B5CF6', accent: '#10B981', background: '#F5F3FF' }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col bg-background font-sans text-gray-800">
+
+    <!-- Top Navigation -->
+    <nav class="bg-primary text-white px-6 py-4 flex justify-between items-center shadow-lg sticky top-0 z-50">
+        <div class="flex items-center space-x-3">
+            <span class="text-2xl font-bold tracking-wider text-secondary">MEGANET</span>
+            <span class="hidden sm:inline-block text-xs bg-secondary/20 border border-secondary/50 px-2 py-1 rounded text-secondary font-bold tracking-widest uppercase">Agent Portal</span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <a href="../dashboard/customer.html" class="text-sm font-medium hover:text-secondary transition text-gray-300">Switch to Customer</a>
+            <button id="logoutBtn" class="bg-white/10 hover:bg-red-600 text-white text-xs px-4 py-2 rounded-lg font-bold transition duration-200">Logout</button>
+        </div>
+    </nav>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-grow p-4 md:p-8 max-w-7xl w-full mx-auto space-y-8">
+        
+        <!-- Welcome Banner -->
+        <div class="bg-gradient-to-r from-primary to-indigo-900 rounded-3xl p-8 shadow-xl text-white relative overflow-hidden">
+            <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                <svg width="300" height="300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+            </div>
+            <div class="relative z-10">
+                <h1 class="text-3xl font-bold mb-2">Welcome, <span id="agentName" class="text-secondary">Partner</span>!</h1>
+                <p class="text-gray-300 max-w-xl">Share your referral link with friends and family. Earn a lifetime commission on every VTU transaction they make on the MegaNet platform.</p>
+            </div>
+        </div>
+
+        <!-- Agent Metrics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Referral Link Card -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-purple-100 flex flex-col justify-between">
+                <div>
+                    <div class="w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-3 text-xl">🔗</div>
+                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Your Referral Link</p>
+                    <div class="bg-slate-50 border border-gray-200 p-3 rounded-xl flex items-center justify-between mt-2">
+                        <span id="refLink" class="text-sm font-mono text-gray-700 truncate mr-2">Generating...</span>
+                    </div>
+                </div>
+                <button id="copyRefBtn" class="w-full mt-4 bg-primary hover:bg-indigo-900 text-white font-bold py-3 rounded-xl transition shadow text-sm">
+                    Copy Link to Share
+                </button>
+            </div>
+
+            <!-- Downline Count -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-purple-100">
+                <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-3 text-xl">👥</div>
+                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Downlines</p>
+                <h3 id="downlineCount" class="text-4xl font-extrabold text-primary mt-2">0</h3>
+                <p class="text-xs text-gray-400 mt-2">Active users in your network</p>
+            </div>
+
+            <!-- Estimated Commission -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-purple-100">
+                <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center mb-3 text-xl">💰</div>
+                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Estimated Commissions</p>
+                <h3 id="commissionTotal" class="text-4xl font-extrabold text-accent mt-2">₦0.00</h3>
+                <p class="text-xs text-gray-400 mt-2">Auto-credited to main wallet</p>
+            </div>
+        </div>
+
+        <!-- Downline Network Table -->
+        <div class="bg-white border border-purple-100 rounded-2xl shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-gray-50 flex justify-between items-center bg-slate-50/50">
+                <h3 class="text-lg font-bold text-primary">Your Network Activity</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-xs font-bold text-gray-500 uppercase border-b border-gray-100 tracking-wider">
+                            <th class="p-4">User</th>
+                            <th class="p-4">Contact</th>
+                            <th class="p-4">Join Date</th>
+                            <th class="p-4">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="downlineTableBody" class="text-sm divide-y divide-gray-50">
+                        <tr>
+                            <td colspan="4" class="p-8 text-center text-gray-400">Loading your network data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Supabase Controller Script -->
+    <script type="module">
+        import { supabase } from "../js/supabase-config.js";
+
+        async function initAgentDashboard() {
+            // 1. Verify Authentication
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
+            
+            if (!user || authError) {
+                window.location.href = "../login.html";
+                return;
+            }
+
+            // 2. Fetch Agent's Profile
+            const { data: profile, error: profileError } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            if (profileError) {
+                alert("Profile load error.");
+                return;
+            }
+
+            // Populate Agent Data
+            document.getElementById("agentName").textContent = profile.full_name;
+            const refCode = profile.username || user.id.substring(0,8);
+            const fullRefLink = `https://meganet.ng/register.html?ref=${refCode}`;
+            document.getElementById("refLink").textContent = fullRefLink;
+
+            // Copy Button Logic
+            document.getElementById("copyRefBtn").addEventListener("click", () => {
+                navigator.clipboard.writeText(fullRefLink);
+                const btn = document.getElementById("copyRefBtn");
+                btn.textContent = "Link Copied!";
+                btn.classList.replace("bg-primary", "bg-accent");
+                setTimeout(() => {
+                    btn.textContent = "Copy Link to Share";
+                    btn.classList.replace("bg-accent", "bg-primary");
+                }, 2000);
+            });
+
+            // 3. Fetch Downlines (Users who registered with this agent's username as referral_code)
+            const { data: downlines, error: downlineError } = await supabase
+                .from('users')
+                .select('full_name, phone, created_at, status')
+                .eq('referral_code', refCode)
+                .order('created_at', { ascending: false });
+
+            const tbody = document.getElementById("downlineTableBody");
+
+            if (downlineError) {
+                console.error("Error fetching downlines:", downlineError);
+                tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-red-500">Error loading network data.</td></tr>`;
+                return;
+            }
+
+            // 4. Populate Downline Table & Stats
+            document.getElementById("downlineCount").textContent = downlines.length;
+            
+            // Mock commission calculation (₦500 per referral for demonstration)
+            const mockCommission = downlines.length * 500;
+            document.getElementById("commissionTotal").textContent = `₦${mockCommission.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
+
+            if (downlines.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="p-12 text-center">
+                            <div class="text-4xl mb-3">📭</div>
+                            <p class="text-gray-500 font-medium">Your network is currently empty.</p>
+                            <p class="text-xs text-gray-400 mt-1">Share your link to start earning commissions!</p>
+                        </td>
+                    </tr>`;
+            } else {
+                tbody.innerHTML = "";
+                downlines.forEach(dUser => {
+                    const row = document.createElement("tr");
+                    row.className = "hover:bg-purple-50/30 transition";
+                    
+                    const dateObj = new Date(dUser.created_at);
+                    const formattedDate = dateObj.toLocaleDateString('en-GB');
+
+                    row.innerHTML = `
+                        <td class="p-4 font-bold text-gray-800">${dUser.full_name}</td>
+                        <td class="p-4 text-gray-600 font-mono text-xs">${dUser.phone || 'N/A'}</td>
+                        <td class="p-4 text-gray-500 text-xs">${formattedDate}</td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 text-[10px] font-bold rounded-md bg-emerald-100 text-emerald-700 uppercase tracking-wider">Active</span>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        initAgentDashboard();
+
+        // Handle Logout
+        document.getElementById("logoutBtn").addEventListener("click", async () => {
+            await supabase.auth.signOut();
+            window.location.href = "../login.html";
+        });
+    </script>
+</body>
+</html>
