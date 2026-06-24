@@ -27,6 +27,7 @@
         </div>
         <div class="flex items-center space-x-4">
             <span id="navUser" class="text-sm font-medium animate-pulse">Loading Profile...</span>
+            <a href="settings.html" class="bg-white/10 hover:bg-white/20 text-white text-xs px-4 py-2 rounded-lg font-bold transition duration-200">Settings</a>
             <button id="logoutBtn" class="bg-white/10 hover:bg-red-600 text-white text-xs px-4 py-2 rounded-lg font-bold transition duration-200">Logout</button>
         </div>
     </nav>
@@ -139,7 +140,7 @@
             
             // If no user, kick back to login
             if (!user || authError) {
-                window.location.href = "../auth/login.html";
+                window.location.href = "../login.html";
                 return;
             }
 
@@ -153,6 +154,12 @@
             if (profileError) {
                 console.error("Error fetching profile:", profileError);
                 document.getElementById("navUser").textContent = "Profile Error";
+                return;
+            }
+
+            // Force PIN Setup before accessing dashboard
+            if (!profile.transaction_pin) {
+                window.location.href = "settings.html?require_pin=true";
                 return;
             }
 
@@ -238,7 +245,7 @@
         document.getElementById("logoutBtn").addEventListener("click", async () => {
             const { error } = await supabase.auth.signOut();
             if (!error) {
-                window.location.href = "../login.html"; // <-- Make sure the ../ is here
+                window.location.href = "../login.html";
             }
         });
     </script>
