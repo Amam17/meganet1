@@ -169,27 +169,15 @@
             statusMsg.className = "px-6 pb-6 text-center text-sm font-semibold text-gray-500 block";
             statusMsg.textContent = "Connecting to telecom dispatch channels...";
 
-              try {
+            try {
                 // THE SECURE EXECUTIVE UPGRADE: Call the Postgres RPC
                 const { data: rpcData, error: rpcError } = await supabase.rpc('process_vtu_transaction', {
                     p_amount: amountCost,
-                    p_service_type: 'data',
+                    p_service_type: 'airtime',
                     p_description: fullDescription
                 });
 
                 if (rpcError) throw rpcError;
-
-                // Step D: Simulation of VTpass/ConnectBridge API Success
-                statusMsg.className = "px-6 pb-6 text-center text-sm font-bold text-emerald-600 block";
-                statusMsg.innerHTML = `Data Provisioning Successful!<br><span class="font-normal text-xs text-gray-500">₦${amountCost} has been deducted from your wallet.</span>`;
-                
-                // Route back to dashboard after 3 seconds
-                setTimeout(() => {
-                    window.location.href = "../dashboard/customer.html";
-                }, 3000);
-
-            }
-                catch (err) {
 
                 // Step D: Simulation of API Success
                 statusMsg.className = "px-6 pb-6 text-center text-sm font-bold text-emerald-600 block";
