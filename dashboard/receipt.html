@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MegaNet - Transaction Receipt</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: { primary: '#0F2D52', secondary: '#00C2FF', accent: '#22C55E', background: '#F8FAFC' }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom print styles to ensure backgrounds render on PDF */
+        @media print {
+            body { background-color: white !important; }
+            .print-shadow-none { box-shadow: none !important; border: 1px solid #e5e7eb !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-background font-sans text-gray-800 p-4 md:p-8">
+
+    <!-- Action Buttons (Hidden when printing) -->
+    <div class="max-w-md mx-auto w-full mb-6 flex justify-between items-center print:hidden">
+        <a href="customer.html" class="text-sm font-bold text-gray-500 hover:text-primary transition flex items-center">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Back
+        </a>
+        <button onclick="window.print()" class="bg-primary hover:bg-blue-900 text-white text-xs px-4 py-2 rounded-lg font-bold transition duration-200 shadow flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            Download / Print
+        </button>
+    </div>
+
+    <!-- Receipt Card -->
+    <main id="receiptCard" class="bg-white max-w-md w-full mx-auto rounded-2xl shadow-xl print-shadow-none overflow-hidden relative">
+        
+        <!-- Loading State -->
+        <div id="loadingState" class="p-12 text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p class="text-gray-500 font-medium">Retrieving receipt details...</p>
+        </div>
+
+        <!-- Actual Receipt Content (Hidden initially) -->
+        <div id="receiptContent" class="hidden">
+            <!-- Header -->
+            <div class="bg-slate-50 p-6 text-center border-b border-gray-100">
+                <div class="flex items-center justify-center space-x-2 mb-2">
+                    <div class="flex items-center justify-center bg-primary rounded-lg w-8 h-8">
+                        <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight text-primary">Mega<span class="text-secondary">Net</span></span>
+                </div>
+                <p class="text-xs text-gray-500 uppercase tracking-widest font-bold">Transaction Receipt</p>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 md:p-8 space-y-6">
+                <!-- Amount & Status -->
+                <div class="text-center">
+                    <p class="text-sm text-gray-500 font-medium mb-1">Total Amount</p>
+                    <h2 id="rxAmount" class="text-4xl font-extrabold text-gray-900 tracking-tight">₦0.00</h2>
+                    <div class="mt-3 inline-flex items-center justify-center space-x-1" id="rxStatusBadge">
+                        <!-- Badge injected via JS -->
+                    </div>
+                </div>
+
+                <div class="border-t border-dashed border-gray-200 my-6"></div>
+
+                <!-- Transaction Details -->
+                <div class="space-y-4">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs text-gray-500 font-semibold uppercase tracking-wider w-1/3">Reference</span>
+                        <span id="rxRef" class="text-sm font-mono font-bold text-gray-800 w-2/3 text-right break-all">...</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs text-gray-500 font-semibold uppercase tracking-wider w-1/3">Date</span>
+                        <span id="rxDate" class="text-sm font-medium text-gray-800 w-2/3 text-right">...</span>
+                    </div>
+
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs text-gray-500 font-semibold uppercase tracking-wider w-1/3">Service</span>
+                        <span id="rxService" class="text-sm font-bold text-primary capitalize w-2/3 text-right bg-blue-50 px-2 py-1 rounded inline-block">...</span>
+                    </div>
+
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs text-gray-500 font-semibold uppercase tracking-wider w-1/3">Description</span>
+                        <span id="rxDesc" class="text-sm font-medium text-gray-700 w-2/3 text-right">...</span>
+                    </div>
+                </div>
+
+                <div class="border-t border-dashed border-gray-200 my-6"></div>
+
+                <!-- Customer Details -->
+                <div class="space-y-4 pb-2">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs text-gray-500 font-semibold uppercase tracking-wider w-1/3">Customer</span>
+                        <span id="rxUser" class="text-sm font-medium text-gray-800 w-2/3 text-right">...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-slate-50 p-6 text-center border-t border-gray-100">
+                <p class="text-[10px] text-gray-400 font-medium">Thank you for using MegaNet Digital.</p>
+                <p class="text-[10px] text-gray-400">Support: support@meganet.ng | www.meganet.ng</p>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden p-12 text-center">
+            <div class="text-4xl mb-4">⚠️</div>
+            <p id="errorMsg" class="text-red-500 font-bold">Transaction not found.</p>
+            <a href="customer.html" class="inline-block mt-4 text-sm font-bold text-primary hover:underline">Return to Dashboard</a>
+        </div>
+    </main>
+
+    <!-- Supabase Controller Script -->
+    <script type="module">
+        import { supabase } from "../js/supabase-config.js";
+
+        async function fetchReceiptData() {
+            // 1. Get Transaction ID from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const txId = urlParams.get('id');
+
+            const loadingState = document.getElementById("loadingState");
+            const receiptContent = document.getElementById("receiptContent");
+            const errorState = document.getElementById("errorState");
+            const errorMsg = document.getElementById("errorMsg");
+
+            if (!txId) {
+                loadingState.classList.add("hidden");
+                errorState.classList.remove("hidden");
+                errorMsg.textContent = "Invalid Receipt Link. No Transaction ID provided.";
+                return;
+            }
+
+            // 2. Authenticate User (Ensure they are logged in)
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
+            if (!user || authError) {
+                window.location.href = "../login.html";
+                return;
+            }
+
+            // 3. Fetch Transaction Data from Supabase
+            const { data: txn, error: txError } = await supabase
+                .from('transactions')
+                .select('*, users(full_name, email)') // Join with users table to get name
+                .eq('id', txId)
+                .single();
+
+            if (txError || !txn) {
+                loadingState.classList.add("hidden");
+                errorState.classList.remove("hidden");
+                errorMsg.textContent = "Receipt not found or you don't have permission to view it.";
+                return;
+            }
+
+            // Optional Security: Ensure the transaction belongs to the logged-in user
+            if (txn.user_id !== user.id) {
+                loadingState.classList.add("hidden");
+                errorState.classList.remove("hidden");
+                errorMsg.textContent = "Unauthorized access to receipt.";
+                return;
+            }
+
+            // 4. Populate the UI
+            document.getElementById("rxAmount").textContent = `₦${Number(txn.amount).toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
+            document.getElementById("rxRef").textContent = txn.id.toUpperCase();
+            
+            // Format Date
+            const dateObj = new Date(txn.created_at);
+            document.getElementById("rxDate").textContent = dateObj.toLocaleDateString('en-GB') + ' ' + dateObj.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
+            
+            // Clean up service type display
+            const serviceDisplay = txn.service_type.replace('_', ' ');
+            document.getElementById("rxService").textContent = serviceDisplay;
+            
+            document.getElementById("rxDesc").textContent = txn.description;
+            
+            // User details from join
+            const userName = txn.users ? txn.users.full_name : "MegaNet User";
+            document.getElementById("rxUser").textContent = userName;
+
+            // Render Status Badge
+            const badgeContainer = document.getElementById("rxStatusBadge");
+            if (txn.status === 'success') {
+                badgeContainer.innerHTML = `<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest flex items-center"><svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg> Successful</span>`;
+            } else if (txn.status === 'failed') {
+                badgeContainer.innerHTML = `<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest flex items-center"><svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg> Failed</span>`;
+            } else {
+                badgeContainer.innerHTML = `<span class="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Pending</span>`;
+            }
+
+            // Hide loader, show receipt
+            loadingState.classList.add("hidden");
+            receiptContent.classList.remove("hidden");
+        }
+
+        // Initialize script
+        fetchReceiptData();
+    </script>
+</body>
+</html>
