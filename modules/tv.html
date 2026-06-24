@@ -110,14 +110,36 @@
         </div>
     </main>
 
+    <!-- SECURITY PIN MODAL (Hidden by default) -->
+    <div id="pinModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl transform transition-all">
+            <div class="text-center mb-5">
+                <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">🔐</div>
+                <h3 class="text-xl font-bold text-gray-800">Authorize Payment</h3>
+                <p class="text-xs text-gray-500 mt-1">Please enter your 4-digit transaction PIN to confirm this subscription.</p>
+            </div>
+            <div class="space-y-4">
+                <input id="transactionPin" type="password" maxlength="4" pattern="[0-9]{4}" placeholder="••••" class="w-full bg-slate-50 border border-gray-200 p-4 rounded-xl font-mono text-center text-3xl tracking-[0.5em] focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500 transition" autocomplete="off">
+                <div id="pinError" class="text-xs font-bold text-red-500 text-center hidden">Incorrect PIN. Please try again.</div>
+                
+                <div class="flex space-x-3 pt-2">
+                    <button id="cancelPinBtn" class="w-1/2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-bold transition text-sm">Cancel</button>
+                    <button id="confirmPinBtn" class="w-1/2 bg-primary hover:bg-blue-900 text-white py-3 rounded-xl font-bold shadow-lg transition text-sm">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Supabase Execution Engine -->
     <script type="module">
         import { supabase } from "../js/supabase-config.js";
 
         let currentUser = null;
         let currentBalance = 0;
+        let userPin = null;
+        let pendingTransaction = null;
 
-        // 1. Authenticate user and fetch current balance
+        // 1. Authenticate user and fetch current balance & PIN
         async function initializeTvModule() {
             const { data: { user }, error } = await supabase.auth.getUser();
             
@@ -130,24 +152,32 @@
 
             const { data: profile, error: profileError } = await supabase
                 .from('users')
-                .select('wallet_balance')
+                .select('wallet_balance, transaction_pin')
                 .eq('id', user.id)
                 .single();
 
             if (profile) {
                 currentBalance = Number(profile.wallet_balance || 0);
+                userPin = profile.transaction_pin;
                 document.getElementById("navBalance").textContent = `₦${currentBalance.toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
             }
         }
 
         initializeTvModule();
 
-        // 2. Form Submission Logic
+        // 2. Form Submission Logic (Intercept for PIN)
         const tvForm = document.getElementById("tvForm");
         const submitBtn = document.getElementById("submitBtn");
         const statusMsg = document.getElementById("statusMessage");
 
-        tvForm.addEventListener("submit", async (e) => {
+        // PIN Modal Elements
+        const pinModal = document.getElementById("pinModal");
+        const transactionPinInput = document.getElementById("transactionPin");
+        const pinError = document.getElementById("pinError");
+        const cancelPinBtn = document.getElementById("cancelPinBtn");
+        const confirmPinBtn = document.getElementById("confirmPinBtn");
+
+        tvForm.addEventListener("submit", (e) => {
             e.preventDefault();
             if (!currentUser) return;
 
@@ -166,6 +196,41 @@
                 return;
             }
 
+            // Security Check: Does user have a PIN?
+            if (!userPin) {
+                statusMsg.className = "px-6 pb-6 text-center text-sm font-bold text-amber-600 block";
+                statusMsg.innerHTML = `You must set up a Transaction PIN before buying cable TV subscriptions. <br><a href="../dashboard/settings.html" class="text-blue-600 hover:underline mt-2 inline-block">Set PIN Now</a>`;
+                return;
+            }
+
+            // Store transaction data and show PIN Modal
+            pendingTransaction = { amountCost, packageDesc, provider, fullDescription };
+            pinModal.classList.remove("hidden");
+            transactionPinInput.value = "";
+            pinError.classList.add("hidden");
+            transactionPinInput.focus();
+        });
+
+        // 3. Handle Cancel PIN
+        cancelPinBtn.addEventListener("click", () => {
+            pinModal.classList.add("hidden");
+            pendingTransaction = null;
+        });
+
+        // 4. Handle Confirm PIN and Execute
+        confirmPinBtn.addEventListener("click", async () => {
+            const enteredPin = transactionPinInput.value;
+
+            // Verify PIN matches
+            if (enteredPin !== userPin) {
+                pinError.classList.remove("hidden");
+                return;
+            }
+
+            // PIN is correct! Hide modal and process
+            pinModal.classList.add("hidden");
+            pinError.classList.add("hidden");
+
             // Lock UI - Phase 1: IUC Verification
             submitBtn.disabled = true;
             submitBtn.innerHTML = `
@@ -176,7 +241,7 @@
                 Verifying Decoder...
             `;
             statusMsg.className = "px-6 pb-6 text-center text-sm font-semibold text-purple-600 block";
-            statusMsg.textContent = `Validating ${provider} Smartcard Details...`;
+            statusMsg.textContent = `Validating ${pendingTransaction.provider} Smartcard Details...`;
 
             // Simulate API Delay for IUC Verification
             setTimeout(async () => {
@@ -191,43 +256,16 @@
                         Activating Package...
                     `;
 
-                    // Step A: Double check current balance directly from DB
-                    const { data: dbProfile, error: fetchError } = await supabase
-                        .from('users')
-                        .select('wallet_balance')
-                        .eq('id', currentUser.id)
-                        .single();
+                    // THE SECURE EXECUTIVE UPGRADE: Call the Postgres RPC
+                    const { data: rpcData, error: rpcError } = await supabase.rpc('process_vtu_transaction', {
+                        p_amount: pendingTransaction.amountCost,
+                        p_service_type: 'cable_tv',
+                        p_description: pendingTransaction.fullDescription
+                    });
 
-                    if (fetchError) throw fetchError;
-                    
-                    const verifiedBalance = Number(dbProfile.wallet_balance || 0);
-                    if (verifiedBalance < amountCost) {
-                        throw new Error("Insufficient wallet balance verified by server.");
-                    }
+                    if (rpcError) throw rpcError;
 
-                    // Step B: Deduct Balance
-                    const newBalance = verifiedBalance - amountCost;
-                    const { error: updateError } = await supabase
-                        .from('users')
-                        .update({ wallet_balance: newBalance })
-                        .eq('id', currentUser.id);
-
-                    if (updateError) throw updateError;
-
-                    // Step C: Log Transaction Receipt
-                    const { error: txError } = await supabase
-                        .from('transactions')
-                        .insert([{
-                            user_id: currentUser.id,
-                            service_type: 'cable_tv',
-                            description: fullDescription,
-                            amount: amountCost,
-                            status: 'success'
-                        }]);
-
-                    if (txError) throw txError;
-
-                    // Step D: Simulation of API Success
+                    // Simulation of API Success
                     submitBtn.classList.add("hidden");
                     
                     statusMsg.className = "px-6 pb-6 text-center block";
@@ -237,7 +275,7 @@
                             <p class="text-lg font-bold text-emerald-600 tracking-wider">SUCCESSFUL</p>
                             <p class="text-[10px] text-gray-500 mt-1">Decoder should reflect viewing within 5 minutes. Keep decoder powered on.</p>
                         </div>
-                        <p class="text-sm text-gray-600 font-semibold mb-3">₦${amountCost.toLocaleString()} deducted for ${packageDesc}.</p>
+                        <p class="text-sm text-gray-600 font-semibold mb-3">₦${pendingTransaction.amountCost.toLocaleString()} deducted for ${pendingTransaction.packageDesc}.</p>
                         <a href="../dashboard/customer.html" class="inline-block bg-primary text-white text-xs font-bold px-6 py-3 rounded-lg hover:bg-blue-900 transition">Return to Dashboard</a>
                     `;
 
