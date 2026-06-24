@@ -35,6 +35,10 @@
         <div class="mb-6">
             <h1 class="text-2xl font-bold text-primary">Account Settings & Security</h1>
             <p class="text-sm text-gray-500 mt-1">Manage your profile, password, and transaction PIN.</p>
+            <div id="mandatoryPinAlert" class="hidden mt-4 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
+                <p class="text-sm text-amber-800 font-bold">⚠️ Security Requirement</p>
+                <p class="text-xs text-amber-700 mt-1">You must set up a 4-digit Transaction PIN before accessing your dashboard and making transactions.</p>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -81,13 +85,19 @@
                     </div>
 
                     <form id="pinForm" class="space-y-4">
+                        <!-- THE NEW CURRENT PIN BOX -->
+                        <div id="oldPinContainer" class="hidden mb-4 border-b border-gray-100 pb-4">
+                            <label class="block text-xs font-bold text-red-600 mb-1">Current PIN (Required for changes)</label>
+                            <input id="oldPin" type="password" maxlength="4" pattern="[0-9]{4}" placeholder="••••" class="w-full bg-red-50 border border-red-200 p-3 rounded-xl font-mono text-center text-2xl tracking-[0.5em] focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition">
+                        </div>
+                        
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-gray-600 mb-1">New 4-Digit PIN</label>
                                 <input id="newPin" type="password" maxlength="4" pattern="[0-9]{4}" placeholder="••••" class="w-full bg-slate-50 border border-gray-200 p-3 rounded-xl font-mono text-center text-2xl tracking-[0.5em] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition" required>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-gray-600 mb-1">Confirm PIN</label>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">Confirm New PIN</label>
                                 <input id="confirmPin" type="password" maxlength="4" pattern="[0-9]{4}" placeholder="••••" class="w-full bg-slate-50 border border-gray-200 p-3 rounded-xl font-mono text-center text-2xl tracking-[0.5em] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition" required>
                             </div>
                         </div>
@@ -144,27 +154,36 @@
                 .single();
 
             if (profile) {
+                // Check if user was forced here to set up PIN
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('require_pin') === 'true' && !profile.transaction_pin) {
+                    document.getElementById('mandatoryPinAlert').classList.remove('hidden');
+                }
+
                 document.getElementById("profileName").textContent = profile.full_name;
                 document.getElementById("profileEmail").textContent = profile.email;
                 document.getElementById("profilePhone").textContent = profile.phone || "Not provided";
                 document.getElementById("profileUsername").textContent = `@${profile.username}`;
                 
-                // If they already have a PIN, update the button text
+                // If they already have a PIN, update the button text and demand the Old PIN
                 if(profile.transaction_pin) {
                     document.getElementById("pinBtn").textContent = "Update Existing PIN";
+                    document.getElementById("oldPinContainer").classList.remove("hidden");
+                    document.getElementById("oldPin").required = true;
                 }
             }
         }
 
         initSettings();
 
-        // Handle PIN Setup
+        // Handle PIN Setup & Verification
         const pinForm = document.getElementById("pinForm");
         const pinBtn = document.getElementById("pinBtn");
         const pinMsg = document.getElementById("pinMsg");
 
         pinForm.addEventListener("submit", async (e) => {
             e.preventDefault();
+            const oldPin = document.getElementById("oldPin").value || null;
             const newPin = document.getElementById("newPin").value;
             const confirmPin = document.getElementById("confirmPin").value;
 
@@ -172,28 +191,42 @@
 
             if (newPin !== confirmPin) {
                 pinMsg.className = "text-xs font-semibold mt-2 text-red-600 block";
-                pinMsg.textContent = "Error: PINs do not match!";
+                pinMsg.textContent = "Error: New PINs do not match!";
                 return;
             }
 
             pinBtn.disabled = true;
-            pinBtn.textContent = "Saving...";
+            pinBtn.textContent = "Verifying & Saving...";
 
-            // Save PIN to Supabase
-            const { error } = await supabase
-                .from('users')
-                .update({ transaction_pin: newPin })
-                .eq('id', currentUser.id);
+            // SECURE ENTERPRISE CALL: Use the new RPC to check the Old PIN server-side
+            const { data, error } = await supabase.rpc('update_transaction_pin', {
+                p_old_pin: oldPin,
+                p_new_pin: newPin
+            });
 
             if (error) {
                 pinMsg.className = "text-xs font-semibold mt-2 text-red-600 block";
-                pinMsg.textContent = "Database Error: " + error.message;
+                pinMsg.textContent = "Security Error: " + error.message;
             } else {
                 pinMsg.className = "text-xs font-semibold mt-2 text-emerald-600 block";
-                pinMsg.textContent = "Success! Transaction PIN securely saved.";
+                pinMsg.textContent = "Success! Transaction PIN securely updated.";
+                document.getElementById("oldPin").value = "";
                 document.getElementById("newPin").value = "";
                 document.getElementById("confirmPin").value = "";
+                
+                // Show the old PIN field for future changes
+                document.getElementById("oldPinContainer").classList.remove("hidden");
+                document.getElementById("oldPin").required = true;
                 pinBtn.textContent = "Update Existing PIN";
+
+                // Redirect back to dashboard if they were forced to set it up
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('require_pin') === 'true') {
+                    pinMsg.innerHTML += "<br>Redirecting to dashboard...";
+                    setTimeout(() => {
+                        window.location.href = "customer.html";
+                    }, 1500);
+                }
             }
             pinBtn.disabled = false;
         });
