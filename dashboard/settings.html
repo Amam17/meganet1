@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MegaNet - Account Settings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: { primary: '#0F2D52', secondary: '#00C2FF', accent: '#22C55E', background: '#F8FAFC' }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col bg-background font-sans text-gray-800">
+
+    <!-- Top Navigation -->
+    <nav class="bg-primary text-white px-6 py-4 flex justify-between items-center shadow-md sticky top-0 z-50">
+        <div class="flex items-center space-x-3">
+            <span class="text-2xl font-bold tracking-wider text-secondary">MEGANET</span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <a href="customer.html" class="bg-white/10 hover:bg-white/20 text-white text-xs px-4 py-2 rounded-lg font-bold transition duration-200">← Dashboard</a>
+        </div>
+    </nav>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-grow p-4 md:p-8 max-w-4xl w-full mx-auto space-y-6">
+        
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold text-primary">Account Settings & Security</h1>
+            <p class="text-sm text-gray-500 mt-1">Manage your profile, password, and transaction PIN.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Profile Info Card (Read Only for MVP) -->
+            <div class="md:col-span-1 space-y-6">
+                <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                    <div class="flex flex-col items-center text-center mb-6">
+                        <div class="w-20 h-20 bg-blue-100 text-primary rounded-full flex items-center justify-center text-4xl font-bold mb-3">
+                            👤
+                        </div>
+                        <h3 id="profileName" class="text-lg font-bold text-gray-800">Loading...</h3>
+                        <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md font-bold uppercase mt-1">Verified Account</span>
+                    </div>
+
+                    <div class="space-y-4 text-sm">
+                        <div class="border-b border-gray-100 pb-2">
+                            <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Email</p>
+                            <p id="profileEmail" class="font-medium text-gray-700 truncate">...</p>
+                        </div>
+                        <div class="border-b border-gray-100 pb-2">
+                            <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Phone</p>
+                            <p id="profilePhone" class="font-medium text-gray-700 font-mono">...</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Username</p>
+                            <p id="profileUsername" class="font-medium text-gray-700">@...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Settings Forms -->
+            <div class="md:col-span-2 space-y-6">
+                
+                <!-- Transaction PIN Setup -->
+                <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center text-xl">🔐</div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800">Transaction PIN</h3>
+                            <p class="text-xs text-gray-500">Required to authorize purchases and transfers.</p>
+                        </div>
+                    </div>
+
+                    <form id="pinForm" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">New 4-Digit PIN</label>
+                                <input id="newPin" type="password" maxlength="4" pattern="[0-9]{4}" placeholder="••••" class="w-full bg-slate-50 border border-gray-200 p-3 rounded-xl font-mono text-center text-2xl tracking-[0.5em] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">Confirm PIN</label>
+                                <input id="confirmPin" type="password" maxlength="4" pattern="[0-9]{4}" placeholder="••••" class="w-full bg-slate-50 border border-gray-200 p-3 rounded-xl font-mono text-center text-2xl tracking-[0.5em] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition" required>
+                            </div>
+                        </div>
+                        <button type="submit" id="pinBtn" class="bg-primary hover:bg-blue-900 text-white px-6 py-3 rounded-xl font-bold shadow transition duration-200 text-sm">Save Security PIN</button>
+                        <div id="pinMsg" class="text-xs font-semibold mt-2 hidden"></div>
+                    </form>
+                </div>
+
+                <!-- Update Password -->
+                <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-red-100 text-red-600 rounded-lg flex items-center justify-center text-xl">🔑</div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800">Change Password</h3>
+                            <p class="text-xs text-gray-500">Update your account login password.</p>
+                        </div>
+                    </div>
+
+                    <form id="passwordForm" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">New Password (min 6 characters)</label>
+                            <input id="newPassword" type="password" placeholder="••••••••" minlength="6" class="w-full bg-slate-50 border border-gray-200 p-3 rounded-xl focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition" required>
+                        </div>
+                        <button type="submit" id="passwordBtn" class="bg-gray-800 hover:bg-black text-white px-6 py-3 rounded-xl font-bold shadow transition duration-200 text-sm">Update Password</button>
+                        <div id="passwordMsg" class="text-xs font-semibold mt-2 hidden"></div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Supabase Controller Script -->
+    <script type="module">
+        import { supabase } from "../js/supabase-config.js";
+
+        let currentUser = null;
+
+        async function initSettings() {
+            // Verify Authentication
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
+            
+            if (!user || authError) {
+                window.location.href = "../login.html";
+                return;
+            }
+            currentUser = user;
+
+            // Fetch Profile Data
+            const { data: profile, error: profileError } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            if (profile) {
+                document.getElementById("profileName").textContent = profile.full_name;
+                document.getElementById("profileEmail").textContent = profile.email;
+                document.getElementById("profilePhone").textContent = profile.phone || "Not provided";
+                document.getElementById("profileUsername").textContent = `@${profile.username}`;
+                
+                // If they already have a PIN, update the button text
+                if(profile.transaction_pin) {
+                    document.getElementById("pinBtn").textContent = "Update Existing PIN";
+                }
+            }
+        }
+
+        initSettings();
+
+        // Handle PIN Setup
+        const pinForm = document.getElementById("pinForm");
+        const pinBtn = document.getElementById("pinBtn");
+        const pinMsg = document.getElementById("pinMsg");
+
+        pinForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const newPin = document.getElementById("newPin").value;
+            const confirmPin = document.getElementById("confirmPin").value;
+
+            pinMsg.classList.remove("hidden");
+
+            if (newPin !== confirmPin) {
+                pinMsg.className = "text-xs font-semibold mt-2 text-red-600 block";
+                pinMsg.textContent = "Error: PINs do not match!";
+                return;
+            }
+
+            pinBtn.disabled = true;
+            pinBtn.textContent = "Saving...";
+
+            // Save PIN to Supabase
+            const { error } = await supabase
+                .from('users')
+                .update({ transaction_pin: newPin })
+                .eq('id', currentUser.id);
+
+            if (error) {
+                pinMsg.className = "text-xs font-semibold mt-2 text-red-600 block";
+                pinMsg.textContent = "Database Error: " + error.message;
+            } else {
+                pinMsg.className = "text-xs font-semibold mt-2 text-emerald-600 block";
+                pinMsg.textContent = "Success! Transaction PIN securely saved.";
+                document.getElementById("newPin").value = "";
+                document.getElementById("confirmPin").value = "";
+                pinBtn.textContent = "Update Existing PIN";
+            }
+            pinBtn.disabled = false;
+        });
+
+        // Handle Password Update
+        const passwordForm = document.getElementById("passwordForm");
+        const passwordBtn = document.getElementById("passwordBtn");
+        const passwordMsg = document.getElementById("passwordMsg");
+
+        passwordForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const newPassword = document.getElementById("newPassword").value;
+
+            passwordMsg.classList.remove("hidden");
+            passwordBtn.disabled = true;
+            passwordBtn.textContent = "Updating...";
+
+            // Update Auth Password via Supabase
+            const { data, error } = await supabase.auth.updateUser({
+                password: newPassword
+            });
+
+            if (error) {
+                passwordMsg.className = "text-xs font-semibold mt-2 text-red-600 block";
+                passwordMsg.textContent = "Error: " + error.message;
+            } else {
+                passwordMsg.className = "text-xs font-semibold mt-2 text-emerald-600 block";
+                passwordMsg.textContent = "Password updated successfully!";
+                document.getElementById("newPassword").value = "";
+            }
+            passwordBtn.disabled = false;
+            passwordBtn.textContent = "Update Password";
+        });
+    </script>
+</body>
+</html>
