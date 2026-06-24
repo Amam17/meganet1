@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MegaNet - Transaction Receipt</title>
+    <title>MegaNet - Customer Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -16,197 +16,265 @@
             }
         }
     </script>
-    <style>
-        /* Custom print styles to ensure backgrounds render on PDF */
-        @media print {
-            body { background-color: white !important; }
-            .print-shadow-none { box-shadow: none !important; border: 1px solid #e5e7eb !important; }
-        }
-    </style>
 </head>
-<body class="min-h-screen flex flex-col bg-background font-sans text-gray-800 p-4 md:p-8">
+<body class="min-h-screen flex flex-col bg-background font-sans text-gray-800">
 
-    <!-- Action Buttons (Hidden when printing) -->
-    <div class="max-w-md mx-auto w-full mb-6 flex justify-between items-center print:hidden">
-        <a href="customer.html" class="text-sm font-bold text-gray-500 hover:text-primary transition flex items-center">
-            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            Back
-        </a>
-        <button onclick="window.print()" class="bg-primary hover:bg-blue-900 text-white text-xs px-4 py-2 rounded-lg font-bold transition duration-200 shadow flex items-center">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-            Download / Print
-        </button>
-    </div>
+    <!-- Top Navigation -->
+    <nav class="bg-primary text-white px-6 py-4 flex justify-between items-center shadow-md sticky top-0 z-50">
+        <div class="flex items-center space-x-3">
+            <span class="text-2xl font-bold tracking-wider text-secondary">MEGANET</span>
+            <span class="hidden sm:inline-block text-xs bg-blue-900 px-2 py-1 rounded text-gray-300">Digital Portal</span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span id="navUser" class="text-sm font-medium animate-pulse">Loading Profile...</span>
+            <a href="settings.html" class="bg-white/10 hover:bg-white/20 text-white text-xs px-4 py-2 rounded-lg font-bold transition duration-200">Settings</a>
+            <button id="logoutBtn" class="bg-white/10 hover:bg-red-600 text-white text-xs px-4 py-2 rounded-lg font-bold transition duration-200">Logout</button>
+        </div>
+    </nav>
 
-    <!-- Receipt Card -->
-    <main id="receiptCard" class="bg-white max-w-md w-full mx-auto rounded-2xl shadow-xl print-shadow-none overflow-hidden relative">
+    <!-- Main Workspace Container -->
+    <main class="flex-grow p-4 md:p-8 max-w-7xl w-full mx-auto space-y-6">
         
-        <!-- Loading State -->
-        <div id="loadingState" class="p-12 text-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p class="text-gray-500 font-medium">Retrieving receipt details...</p>
-        </div>
-
-        <!-- Actual Receipt Content (Hidden initially) -->
-        <div id="receiptContent" class="hidden">
-            <!-- Header -->
-            <div class="bg-slate-50 p-6 text-center border-b border-gray-100">
-                <div class="flex items-center justify-center space-x-2 mb-2">
-                    <div class="flex items-center justify-center bg-primary rounded-lg w-8 h-8">
-                        <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    </div>
-                    <span class="text-xl font-bold tracking-tight text-primary">Mega<span class="text-secondary">Net</span></span>
-                </div>
-                <p class="text-xs text-gray-500 uppercase tracking-widest font-bold">Transaction Receipt</p>
-            </div>
-
-            <!-- Body -->
-            <div class="p-6 md:p-8 space-y-6">
-                <!-- Amount & Status -->
-                <div class="text-center">
-                    <p class="text-sm text-gray-500 font-medium mb-1">Total Amount</p>
-                    <h2 id="rxAmount" class="text-4xl font-extrabold text-gray-900 tracking-tight">₦0.00</h2>
-                    <div class="mt-3 inline-flex items-center justify-center space-x-1" id="rxStatusBadge">
-                        <!-- Badge injected via JS -->
-                    </div>
-                </div>
-
-                <div class="border-t border-dashed border-gray-200 my-6"></div>
-
-                <!-- Transaction Details -->
-                <div class="space-y-4">
-                    <div class="flex justify-between items-start">
-                        <span class="text-xs text-gray-500 font-semibold uppercase tracking-wider w-1/3">Reference</span>
-                        <span id="rxRef" class="text-sm font-mono font-bold text-gray-800 w-2/3 text-right break-all">...</span>
-                    </div>
-                    
-                    <div class="flex justify-between items-start">
-                        <span class="text-xs text-gray-500 font-semibold uppercase tracking-wider w-1/3">Date</span>
-                        <span id="rxDate" class="text-sm font-medium text-gray-800 w-2/3 text-right">...</span>
-                    </div>
-
-                    <div class="flex justify-between items-start">
-                        <span class="text-xs text-gray-500 font-semibold uppercase tracking-wider w-1/3">Service</span>
-                        <span id="rxService" class="text-sm font-bold text-primary capitalize w-2/3 text-right bg-blue-50 px-2 py-1 rounded inline-block">...</span>
-                    </div>
-
-                    <div class="flex justify-between items-start">
-                        <span class="text-xs text-gray-500 font-semibold uppercase tracking-wider w-1/3">Description</span>
-                        <span id="rxDesc" class="text-sm font-medium text-gray-700 w-2/3 text-right">...</span>
-                    </div>
-                </div>
-
-                <div class="border-t border-dashed border-gray-200 my-6"></div>
-
-                <!-- Customer Details -->
-                <div class="space-y-4 pb-2">
-                    <div class="flex justify-between items-start">
-                        <span class="text-xs text-gray-500 font-semibold uppercase tracking-wider w-1/3">Customer</span>
-                        <span id="rxUser" class="text-sm font-medium text-gray-800 w-2/3 text-right">...</span>
-                    </div>
+        <!-- Welcome & Balance Banner Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Wallet Card -->
+            <div class="bg-primary text-white rounded-2xl p-6 shadow-xl relative overflow-hidden transform hover:-translate-y-1 transition duration-300">
+                <div class="absolute right-0 bottom-0 opacity-10 text-9xl font-bold -mb-8 -mr-4 text-white">₦</div>
+                <p class="text-sm text-gray-300 font-medium tracking-wide uppercase">Available Balance</p>
+                <h2 id="walletDisplay" class="text-4xl font-bold mt-2 text-secondary">₦0.00</h2>
+                <div class="mt-4 flex space-x-2">
+                    <span class="text-xs bg-accent/20 text-accent px-2 py-1 rounded-md border border-accent/30 flex items-center">
+                        <span class="w-2 h-2 rounded-full bg-accent mr-1.5 animate-pulse"></span> Wallet Active
+                    </span>
                 </div>
             </div>
 
-            <!-- Footer -->
-            <div class="bg-slate-50 p-6 text-center border-t border-gray-100">
-                <p class="text-[10px] text-gray-400 font-medium">Thank you for using MegaNet Digital.</p>
-                <p class="text-[10px] text-gray-400">Support: support@meganet.ng | www.meganet.ng</p>
+            <!-- Referral Card -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition">
+                <div>
+                    <p class="text-sm text-gray-500 font-medium uppercase tracking-wide">Referral Earnings</p>
+                    <h2 id="referralDisplay" class="text-3xl font-bold text-primary mt-1">₦0.00</h2>
+                </div>
+                <div class="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
+                    <span id="refLinkDisplay" class="text-xs text-gray-400 truncate max-w-[180px]">Loading link...</span>
+                    <button id="copyRefBtn" class="text-xs text-secondary font-bold hover:text-primary transition bg-blue-50 px-3 py-1.5 rounded-lg">Copy Link</button>
+                </div>
+            </div>
+
+            <!-- Total Activity Monitor -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition">
+                <div>
+                    <p class="text-sm text-gray-500 font-medium uppercase tracking-wide">Total Transactions</p>
+                    <h2 id="txCountDisplay" class="text-3xl font-bold text-primary mt-1">0</h2>
+                </div>
+                <div class="text-xs text-gray-400 mt-3 pt-3 border-t border-gray-100">
+                    Account Status: <span id="roleDisplay" class="font-bold text-accent uppercase">Verified</span>
+                </div>
             </div>
         </div>
 
-        <!-- Error State -->
-        <div id="errorState" class="hidden p-12 text-center">
-            <div class="text-4xl mb-4">⚠️</div>
-            <p id="errorMsg" class="text-red-500 font-bold">Transaction not found.</p>
-            <a href="customer.html" class="inline-block mt-4 text-sm font-bold text-primary hover:underline">Return to Dashboard</a>
+        <!-- System Module Quick Launcher -->
+        <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+            <h3 class="text-lg font-bold text-primary mb-4">Quick Operations</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                <a href="../modules/data.html" class="flex flex-col items-center justify-center p-4 bg-slate-50 hover:bg-blue-50 border border-gray-100 rounded-xl transition group text-center cursor-pointer">
+                    <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700 font-bold mb-2 text-xl group-hover:scale-110 transition">📱</div>
+                    <span class="text-sm font-semibold text-gray-700">Buy Data</span>
+                </a>
+                <a href="../modules/airtime.html" class="flex flex-col items-center justify-center p-4 bg-slate-50 hover:bg-blue-50 border border-gray-100 rounded-xl transition group text-center cursor-pointer">
+                    <div class="w-12 h-12 rounded-lg bg-cyan-100 flex items-center justify-center text-cyan-700 font-bold mb-2 text-xl group-hover:scale-110 transition">☎</div>
+                    <span class="text-sm font-semibold text-gray-700">Buy Airtime</span>
+                </a>
+                <a href="../modules/electricity.html" class="flex flex-col items-center justify-center p-4 bg-slate-50 hover:bg-blue-50 border border-gray-100 rounded-xl transition group text-center cursor-pointer">
+                    <div class="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center text-amber-700 font-bold mb-2 text-xl group-hover:scale-110 transition">⚡</div>
+                    <span class="text-sm font-semibold text-gray-700">Electricity</span>
+                </a>
+                <a href="../modules/tv.html" class="flex flex-col items-center justify-center p-4 bg-slate-50 hover:bg-blue-50 border border-gray-100 rounded-xl transition group text-center cursor-pointer">
+                    <div class="w-12 h-12 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold mb-2 text-xl group-hover:scale-110 transition">📺</div>
+                    <span class="text-sm font-semibold text-gray-700">Cable TV</span>
+                </a>
+                <a href="../modules/fund.html" class="flex flex-col items-center justify-center p-4 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition group text-center cursor-pointer shadow-sm">
+                    <div class="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold mb-2 text-xl group-hover:scale-110 transition">💰</div>
+                    <span class="text-sm font-semibold text-emerald-800">Fund Wallet</span>
+                </a>
+            </div>
         </div>
+
+        <!-- Main Ledger History Table -->
+        <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-slate-50/50">
+                <h3 class="text-lg font-bold text-primary">Recent Ledger Activity</h3>
+                <span class="text-xs text-secondary font-medium bg-blue-50 px-2 py-1 rounded">Live Sync</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-xs font-bold text-gray-500 uppercase border-b border-gray-100">
+                            <th class="p-4">Transaction Ref</th>
+                            <th class="p-4">Service Type</th>
+                            <th class="p-4">Description</th>
+                            <th class="p-4">Amount</th>
+                            <th class="p-4">Status</th>
+                            <th class="p-4">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledgerTableBody" class="text-sm divide-y divide-gray-100">
+                        <tr id="loadingRow">
+                            <td colspan="6" class="p-8 text-center text-gray-400 italic">Syncing pipeline records from Supabase...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </main>
 
     <!-- Supabase Controller Script -->
     <script type="module">
         import { supabase } from "../js/supabase-config.js";
 
-        async function fetchReceiptData() {
-            // 1. Get Transaction ID from URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            const txId = urlParams.get('id');
-
-            const loadingState = document.getElementById("loadingState");
-            const receiptContent = document.getElementById("receiptContent");
-            const errorState = document.getElementById("errorState");
-            const errorMsg = document.getElementById("errorMsg");
-
-            if (!txId) {
-                loadingState.classList.add("hidden");
-                errorState.classList.remove("hidden");
-                errorMsg.textContent = "Invalid Receipt Link. No Transaction ID provided.";
-                return;
+        // ENTERPRISE SECURITY: Auto-Logout Inactivity Timer (5 Minutes)
+        const setupInactivityTimer = () => {
+            let time;
+            const logout = async () => {
+                await supabase.auth.signOut();
+                alert("For your security, you have been logged out due to inactivity.");
+                window.location.href = "../login.html";
             }
+            const resetTimer = () => {
+                clearTimeout(time);
+                time = setTimeout(logout, 300000); // 300,000 ms = 5 minutes
+            }
+            
+            // Listen for any user action
+            window.onload = resetTimer;
+            document.onmousemove = resetTimer;
+            document.onkeypress = resetTimer;
+            document.ontouchstart = resetTimer;
+            document.onclick = resetTimer;
+        };
+        setupInactivityTimer();
 
-            // 2. Authenticate User (Ensure they are logged in)
+        // Main initialization function
+        async function initDashboard() {
+            // 1. Get current authenticated user session
             const { data: { user }, error: authError } = await supabase.auth.getUser();
+            
+            // If no user, kick back to login
             if (!user || authError) {
                 window.location.href = "../login.html";
                 return;
             }
 
-            // 3. Fetch Transaction Data from Supabase
-            const { data: txn, error: txError } = await supabase
-                .from('transactions')
-                .select('*, users(full_name, email)') // Join with users table to get name
-                .eq('id', txId)
+            // 2. Fetch User Profile from 'users' table
+            const { data: profile, error: profileError } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', user.id)
                 .single();
 
-            if (txError || !txn) {
-                loadingState.classList.add("hidden");
-                errorState.classList.remove("hidden");
-                errorMsg.textContent = "Receipt not found or you don't have permission to view it.";
+            if (profileError) {
+                console.error("Error fetching profile:", profileError);
+                document.getElementById("navUser").textContent = "Profile Error";
                 return;
             }
 
-            // Optional Security: Ensure the transaction belongs to the logged-in user
-            if (txn.user_id !== user.id) {
-                loadingState.classList.add("hidden");
-                errorState.classList.remove("hidden");
-                errorMsg.textContent = "Unauthorized access to receipt.";
+            // Force PIN Setup before accessing dashboard
+            if (!profile.transaction_pin) {
+                window.location.href = "settings.html?require_pin=true";
                 return;
             }
 
-            // 4. Populate the UI
-            document.getElementById("rxAmount").textContent = `₦${Number(txn.amount).toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
-            document.getElementById("rxRef").textContent = txn.id.toUpperCase();
+            // 3. Populate Dashboard UI with Profile Data
+            document.getElementById("navUser").textContent = profile.full_name || "User";
+            document.getElementById("navUser").classList.remove("animate-pulse");
             
-            // Format Date
-            const dateObj = new Date(txn.created_at);
-            document.getElementById("rxDate").textContent = dateObj.toLocaleDateString('en-GB') + ' ' + dateObj.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
+            // Format money to Naira
+            const formattedBalance = Number(profile.wallet_balance || 0).toLocaleString('en-NG', { minimumFractionDigits: 2 });
+            document.getElementById("walletDisplay").textContent = `₦${formattedBalance}`;
             
-            // Clean up service type display
-            const serviceDisplay = txn.service_type.replace('_', ' ');
-            document.getElementById("rxService").textContent = serviceDisplay;
+            document.getElementById("refLinkDisplay").textContent = `meganet.ng/ref/${profile.username || user.id.substring(0,8)}`;
             
-            document.getElementById("rxDesc").textContent = txn.description;
-            
-            // User details from join
-            const userName = txn.users ? txn.users.full_name : "MegaNet User";
-            document.getElementById("rxUser").textContent = userName;
+            // Setup Copy Link functionality
+            document.getElementById("copyRefBtn").addEventListener("click", () => {
+                navigator.clipboard.writeText(`https://meganet.ng/ref/${profile.username || user.id.substring(0,8)}`);
+                const btn = document.getElementById("copyRefBtn");
+                btn.textContent = "Copied!";
+                btn.classList.add("bg-green-100", "text-green-700");
+                setTimeout(() => {
+                    btn.textContent = "Copy Link";
+                    btn.classList.remove("bg-green-100", "text-green-700");
+                }, 2000);
+            });
 
-            // Render Status Badge
-            const badgeContainer = document.getElementById("rxStatusBadge");
-            if (txn.status === 'success') {
-                badgeContainer.innerHTML = `<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest flex items-center"><svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg> Successful</span>`;
-            } else if (txn.status === 'failed') {
-                badgeContainer.innerHTML = `<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest flex items-center"><svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg> Failed</span>`;
+            // 4. Fetch Transactions for this user
+            const { data: transactions, error: txError } = await supabase
+                .from('transactions')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false })
+                .limit(10);
+
+            const tbody = document.getElementById("ledgerTableBody");
+            
+            if (txError) {
+                console.error("Error fetching transactions:", txError);
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-400">Failed to load transactions.</td></tr>`;
+                return;
+            }
+
+            // 5. Populate Transaction Table
+            if (!transactions || transactions.length === 0) {
+                document.getElementById("txCountDisplay").textContent = "0";
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400">No transactions found yet. Fund your wallet to get started.</td></tr>`;
             } else {
-                badgeContainer.innerHTML = `<span class="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Pending</span>`;
-            }
+                document.getElementById("txCountDisplay").textContent = transactions.length;
+                tbody.innerHTML = ""; // Clear loading row
 
-            // Hide loader, show receipt
-            loadingState.classList.add("hidden");
-            receiptContent.classList.remove("hidden");
+                transactions.forEach(txn => {
+                    const row = document.createElement("tr");
+                    row.className = "hover:bg-blue-50/50 transition cursor-default";
+                    
+                    // Status Badge Logic
+                    let statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-amber-100 text-amber-800 border border-amber-200">Pending</span>`;
+                    if (txn.status === "success") {
+                        statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">Success</span>`;
+                    } else if (txn.status === "failed") {
+                        statusBadge = `<span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-red-100 text-red-800 border border-red-200">Failed</span>`;
+                    }
+
+                    // Format Date
+                    const dateObj = new Date(txn.created_at);
+                    const formattedDate = dateObj.toLocaleDateString('en-GB') + ' ' + dateObj.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
+
+                    row.innerHTML = `
+                        <td class="p-4 font-mono text-xs text-gray-500 uppercase">${txn.id.substring(0,8)}...</td>
+                        <td class="p-4 font-semibold text-primary capitalize">${txn.service_type || "Service"}</td>
+                        <td class="p-4 text-gray-600 text-sm">${txn.description || "N/A"}</td>
+                        <td class="p-4 font-bold text-gray-900">₦${Number(txn.amount || 0).toLocaleString()}</td>
+                        <td class="p-4">${statusBadge}</td>
+                        <td class="p-4 flex items-center justify-between">
+                            <span class="text-xs text-gray-500">${formattedDate}</span>
+                            <a href="receipt.html?id=${txn.id}" class="text-secondary hover:text-primary transition p-1" title="View Receipt">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            </a>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
         }
 
-        // Initialize script
-        fetchReceiptData();
+        // Initialize on load
+        initDashboard();
+
+        // Handle Logout
+        document.getElementById("logoutBtn").addEventListener("click", async () => {
+            const { error } = await supabase.auth.signOut();
+            if (!error) {
+                window.location.href = "../login.html";
+            }
+        });
     </script>
 </body>
 </html>
