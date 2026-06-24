@@ -133,6 +133,28 @@
     <script type="module">
         import { supabase } from "../js/supabase-config.js";
 
+        // ENTERPRISE SECURITY: Auto-Logout Inactivity Timer (5 Minutes)
+        const setupInactivityTimer = () => {
+            let time;
+            const logout = async () => {
+                await supabase.auth.signOut();
+                alert("For your security, you have been logged out due to inactivity.");
+                window.location.href = "../login.html";
+            }
+            const resetTimer = () => {
+                clearTimeout(time);
+                time = setTimeout(logout, 300000); // 300,000 ms = 5 minutes
+            }
+            
+            // Listen for any user action
+            window.onload = resetTimer;
+            document.onmousemove = resetTimer;
+            document.onkeypress = resetTimer;
+            document.ontouchstart = resetTimer;
+            document.onclick = resetTimer;
+        };
+        setupInactivityTimer();
+
         // Main initialization function
         async function initDashboard() {
             // 1. Get current authenticated user session
