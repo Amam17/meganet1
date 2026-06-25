@@ -207,7 +207,17 @@
                 }, 2000);
             });
 
-            // 4. Fetch Transactions for this user
+            // 4. Fetch Total Transaction Count (Exact) for the stat card
+            const { count, error: countError } = await supabase
+                .from('transactions')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', user.id);
+                
+            if (!countError) {
+                document.getElementById("txCountDisplay").textContent = count || 0;
+            }
+
+            // Fetch Recent Transactions for the Ledger Table (Limited to 10 rows)
             const { data: transactions, error: txError } = await supabase
                 .from('transactions')
                 .select('*')
@@ -225,10 +235,8 @@
 
             // 5. Populate Transaction Table
             if (!transactions || transactions.length === 0) {
-                document.getElementById("txCountDisplay").textContent = "0";
                 tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400">No transactions found yet. Fund your wallet to get started.</td></tr>`;
             } else {
-                document.getElementById("txCountDisplay").textContent = transactions.length;
                 tbody.innerHTML = ""; // Clear loading row
 
                 transactions.forEach(txn => {
