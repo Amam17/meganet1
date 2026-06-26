@@ -126,9 +126,45 @@
                     </form>
                 </div>
 
+                <!-- Danger Zone (Delete Account) -->
+                <div class="bg-red-50 border border-red-200 rounded-2xl p-6 shadow-sm mt-8">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-red-100 text-red-600 rounded-lg flex items-center justify-center text-xl">⚠️</div>
+                        <div>
+                            <h3 class="text-lg font-bold text-red-700">Danger Zone</h3>
+                            <p class="text-xs text-red-500 font-medium">Irreversible account actions.</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-700 mb-4">Once you delete your account, there is no going back. All your wallet funds, transaction history, and referral networks will be permanently wiped.</p>
+                    <button type="button" id="openDeleteModalBtn" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-bold shadow transition duration-200 text-sm flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        Delete My Account
+                    </button>
+                </div>
+
             </div>
         </div>
     </main>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl transform transition-all">
+            <div class="text-center mb-5">
+                <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl">🛑</div>
+                <h3 class="text-xl font-extrabold text-gray-900">Delete Account?</h3>
+                <p class="text-sm text-gray-500 mt-2">This action is <span class="font-bold text-red-600">permanent</span>. Please type <strong>DELETE</strong> below to confirm you want to erase your account and forfeit any remaining wallet balance.</p>
+            </div>
+            <div class="space-y-4">
+                <input id="deleteConfirmText" type="text" placeholder="Type DELETE here" class="w-full bg-slate-50 border border-gray-200 p-4 rounded-xl font-bold text-center tracking-widest uppercase focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500 transition" autocomplete="off">
+                <div id="deleteError" class="text-xs font-bold text-red-500 text-center hidden"></div>
+                
+                <div class="flex space-x-3 pt-2">
+                    <button id="cancelDeleteBtn" class="w-1/2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-bold transition text-sm">Cancel</button>
+                    <button id="executeDeleteBtn" class="w-1/2 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold shadow-lg transition text-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>Permanently Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Supabase Controller Script -->
     <script type="module">
@@ -259,6 +295,70 @@
             }
             passwordBtn.disabled = false;
             passwordBtn.textContent = "Update Password";
+        });
+
+        // Handle Account Deletion
+        const openDeleteModalBtn = document.getElementById("openDeleteModalBtn");
+        const deleteModal = document.getElementById("deleteModal");
+        const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+        const executeDeleteBtn = document.getElementById("executeDeleteBtn");
+        const deleteConfirmText = document.getElementById("deleteConfirmText");
+        const deleteError = document.getElementById("deleteError");
+
+        openDeleteModalBtn.addEventListener("click", () => {
+            deleteModal.classList.remove("hidden");
+            deleteConfirmText.value = "";
+            executeDeleteBtn.disabled = true;
+            deleteError.classList.add("hidden");
+        });
+
+        cancelDeleteBtn.addEventListener("click", () => {
+            deleteModal.classList.add("hidden");
+        });
+
+        // Require them to type DELETE to unlock the button
+        deleteConfirmText.addEventListener("input", (e) => {
+            if (e.target.value === "DELETE") {
+                executeDeleteBtn.disabled = false;
+            } else {
+                executeDeleteBtn.disabled = true;
+            }
+        });
+
+        executeDeleteBtn.addEventListener("click", async () => {
+            if (!currentUser) return;
+            
+            executeDeleteBtn.disabled = true;
+            executeDeleteBtn.innerHTML = "Deleting...";
+            deleteError.classList.add("hidden");
+
+            try {
+                // 1. Soft-Delete user from the public 'users' table
+                const { error: dbError } = await supabase
+                    .from('users')
+                    .update({ 
+                        status: 'deleted', 
+                        wallet_balance: 0,
+                        phone: 'DELETED',
+                        full_name: 'Deleted User'
+                    })
+                    .eq('id', currentUser.id);
+
+                if (dbError) throw dbError;
+
+                // 2. Sign the user out completely
+                await supabase.auth.signOut();
+                
+                // 3. Redirect to homepage
+                alert("Your account has been permanently deleted.");
+                window.location.href = "../index.html";
+
+            } catch (err) {
+                deleteError.textContent = "Error deleting account: " + err.message;
+                deleteError.classList.remove("hidden");
+                executeDeleteBtn.disabled = false;
+                executeDeleteBtn.innerHTML = "Permanently Delete";
+            }
         });
     </script>
 </body>
