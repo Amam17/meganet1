@@ -178,6 +178,11 @@
 
                 if (authError) throw authError;
 
+                // BUG FIX: Ensure the user object was actually returned (prevents the crash!)
+                if (!authData || !authData.user) {
+                    throw new Error("This email is already registered. Please login instead.");
+                }
+
                 const userId = authData.user.id;
 
                 // 3. Save extra details to 'users' table
@@ -202,14 +207,14 @@
                 messageBox.innerHTML = "<span class='text-accent'>Account Created Successfully! Redirecting to dashboard...</span>";
                 messageBox.classList.remove("hidden");
 
-                // CORRECTED PATH: Route to Customer Dashboard
+                // Route to Customer Dashboard
                 setTimeout(() => {
                     window.location.href = "dashboard/customer.html";
                 }, 2000);
 
             } catch (error) {
                 // Error State
-                messageBox.innerHTML = `<span class='text-red-500'>${error.message}</span>`;
+                messageBox.innerHTML = `<span class='text-red-500 font-bold'>Error: ${error.message}</span>`;
                 messageBox.classList.remove("hidden");
                 registerBtn.disabled = false;
                 registerBtn.innerHTML = "<span>Create Account</span>";
