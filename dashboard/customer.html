@@ -26,6 +26,13 @@
             <span class="hidden sm:inline-block text-xs bg-blue-900 px-2 py-1 rounded text-gray-300">Digital Portal</span>
         </div>
         <div class="flex items-center space-x-4">
+            
+            <!-- NEW NOTIFICATION BELL -->
+            <button id="notifBtn" class="relative p-2 text-white hover:bg-white/10 rounded-full transition focus:outline-none">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                <span id="notifBadge" class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-primary rounded-full animate-pulse"></span>
+            </button>
+
             <span id="navUser" class="text-sm font-medium animate-pulse">Loading Profile...</span>
             <a href="settings.html" class="bg-white/10 hover:bg-white/20 text-white text-xs px-4 py-2 rounded-lg font-bold transition duration-200">Settings</a>
             <button id="logoutBtn" class="bg-white/10 hover:bg-red-600 text-white text-xs px-4 py-2 rounded-lg font-bold transition duration-200">Logout</button>
@@ -128,6 +135,32 @@
         </div>
 
     </main>
+
+    <!-- NEW NOTIFICATIONS SLIDE-OVER / MODAL -->
+    <div id="notifModal" class="fixed inset-0 bg-black/50 z-50 hidden backdrop-blur-sm flex justify-end">
+        <div class="bg-white w-full max-w-sm h-full shadow-2xl transform transition-transform translate-x-full duration-300" id="notifPanel">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-primary text-white">
+                <h3 class="text-lg font-bold">Notifications</h3>
+                <button id="closeNotifBtn" class="text-white hover:text-secondary p-1 rounded transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-4 space-y-3 overflow-y-auto h-[calc(100vh-80px)]" id="notifList">
+                <!-- Sample Notifications -->
+                <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl relative">
+                    <span class="absolute top-4 right-4 w-2 h-2 rounded-full bg-secondary"></span>
+                    <p class="text-xs font-bold text-primary uppercase tracking-wider mb-1">System Update</p>
+                    <p class="text-sm text-gray-700 font-medium">Welcome to MegaNet Digital! Your account is fully secured and ready for transactions.</p>
+                    <p class="text-[10px] text-gray-400 mt-2">Just now</p>
+                </div>
+                <div class="bg-slate-50 border border-gray-100 p-4 rounded-xl relative opacity-70">
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Promo Alert</p>
+                    <p class="text-sm text-gray-600 font-medium">MTN SME Data is now available at a discounted rate of ₦330/GB.</p>
+                    <p class="text-[10px] text-gray-400 mt-2">2 hours ago</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Supabase Controller Script -->
     <script type="module">
@@ -281,6 +314,39 @@
             const { error } = await supabase.auth.signOut();
             if (!error) {
                 window.location.href = "../login.html";
+            }
+        });
+
+        // NEW: Handle Notifications Toggle
+        const notifBtn = document.getElementById("notifBtn");
+        const notifModal = document.getElementById("notifModal");
+        const notifPanel = document.getElementById("notifPanel");
+        const closeNotifBtn = document.getElementById("closeNotifBtn");
+        const notifBadge = document.getElementById("notifBadge");
+
+        notifBtn.addEventListener("click", () => {
+            notifModal.classList.remove("hidden");
+            // Small delay to allow CSS transition to trigger smoothly
+            setTimeout(() => {
+                notifPanel.classList.remove("translate-x-full");
+            }, 10);
+            
+            // Turn off the red badge pulse once viewed
+            notifBadge.classList.remove("animate-pulse", "bg-red-500");
+            notifBadge.classList.add("bg-gray-300");
+        });
+
+        closeNotifBtn.addEventListener("click", () => {
+            notifPanel.classList.add("translate-x-full");
+            setTimeout(() => {
+                notifModal.classList.add("hidden");
+            }, 300); // Wait for animation to finish
+        });
+        
+        // Close modal when clicking anywhere outside the panel
+        notifModal.addEventListener("click", (e) => {
+            if (e.target === notifModal) {
+                closeNotifBtn.click();
             }
         });
     </script>
