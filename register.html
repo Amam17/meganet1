@@ -10,42 +10,35 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Poppins', 'sans-serif'],
-                    },
-                    colors: {
-                        primary: '#0F2D52',
-                        secondary: '#00C2FF',
-                        accent: '#22C55E',
-                        background: '#F8FAFC'
-                    }
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: { primary: '#0F2D52', secondary: '#00C2FF', accent: '#22C55E', background: '#F8FAFC' }
                 }
             }
         }
     </script>
 </head>
-<body class="bg-background min-h-screen flex items-center justify-center p-4 font-sans relative overflow-x-hidden">
+<body class="bg-background min-h-screen flex items-center justify-center p-4 font-sans relative overflow-hidden">
 
     <!-- Decorative Background Elements -->
     <div class="absolute top-0 left-0 w-full h-96 bg-primary rounded-b-[100px] sm:rounded-b-[200px] shadow-2xl z-0"></div>
-    <div class="absolute top-10 left-10 w-64 h-64 bg-secondary rounded-full opacity-20 blur-3xl z-0"></div>
+    <div class="absolute top-10 right-10 w-64 h-64 bg-secondary rounded-full opacity-20 blur-3xl z-0"></div>
 
-    <!-- Register Container -->
+    <!-- Registration Container -->
     <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-8 relative z-10 border border-gray-100 my-8">
         
         <!-- Header -->
-        <div class="text-center mb-8">
+        <div class="text-center mb-6">
             <div class="flex items-center justify-center space-x-2 mb-4">
                 <div class="flex items-center justify-center bg-primary rounded-lg w-10 h-10 shadow-md">
                     <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
                 <span class="text-2xl font-bold tracking-tight text-primary">Mega<span class="text-secondary">Net</span></span>
             </div>
-            <h1 class="text-2xl font-bold text-gray-800">Create Account</h1>
-            <p class="text-sm text-gray-500 mt-1">Join the MegaNet Digital ecosystem today</p>
+            <h1 class="text-xl font-bold text-gray-800">Create an Account</h1>
+            <p class="text-sm text-gray-500 mt-1">Join the ultimate digital VTU platform</p>
         </div>
 
-        <!-- Register Form -->
+        <!-- Registration Form -->
         <form id="registerForm" class="space-y-4">
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -55,7 +48,7 @@
                 </div>
                 <div>
                     <label for="username" class="block text-xs font-semibold text-gray-700 mb-1">Username</label>
-                    <input id="username" type="text" placeholder="johndoe" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary focus:border-secondary transition outline-none text-gray-800 text-sm" required>
+                    <input id="username" type="text" placeholder="johndoe123" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary focus:border-secondary transition outline-none text-gray-800 text-sm" required>
                 </div>
             </div>
 
@@ -75,8 +68,8 @@
                 <div class="relative">
                     <input id="password" type="password" placeholder="••••••••" class="w-full px-4 pr-12 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary focus:border-secondary transition outline-none text-gray-800 text-sm" required minlength="6">
                     
-                    <!-- New Eye Icon Toggle Button -->
-                    <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition focus:outline-none">
+                    <!-- Eye Icon Toggle Button -->
+                    <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition focus:outline-none z-10 cursor-pointer">
                         <svg id="eyeIcon" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -87,36 +80,36 @@
 
             <div>
                 <label for="referral" class="block text-xs font-semibold text-gray-700 mb-1">Referral Code (Optional)</label>
-                <input id="referral" type="text" placeholder="Enter referral code if any" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary focus:border-secondary transition outline-none text-gray-800 text-sm">
+                <input id="referral" type="text" placeholder="Leave empty if none" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-secondary focus:border-secondary transition outline-none text-gray-800 text-sm">
             </div>
 
-            <button type="submit" id="registerBtn" class="w-full bg-primary hover:bg-blue-900 text-white py-3.5 rounded-xl font-bold shadow-lg transition duration-200 mt-2 flex justify-center items-center">
+            <button type="submit" id="registerBtn" class="w-full bg-primary hover:bg-blue-900 text-white py-3.5 rounded-xl font-bold shadow-lg transition duration-200 flex justify-center items-center mt-6">
                 <span>Create Account</span>
             </button>
 
         </form>
 
         <!-- Message Box -->
-        <div id="messageBox" class="mt-4 text-center text-sm font-semibold hidden p-3 rounded-lg"></div>
+        <div id="messageBox" class="mt-4 text-center text-sm font-semibold hidden"></div>
 
         <!-- Footer link -->
         <p class="text-center mt-6 text-sm text-gray-600">
             Already have an account? 
-            <a href="login.html" class="text-secondary font-bold hover:underline">Login</a>
+            <a href="login.html" class="text-secondary font-bold hover:underline">Secure Login</a>
         </p>
 
     </div>
 
     <!-- Supabase Registration Script -->
     <script type="module">
-        // Import Supabase client from your JS folder
-        import { supabase } from "../js/supabase-config.js";
+        // CORRECTED PATH: Since register.html is in the root folder
+        import { supabase } from "./js/supabase-config.js";
 
         const registerForm = document.getElementById("registerForm");
         const registerBtn = document.getElementById("registerBtn");
         const messageBox = document.getElementById("messageBox");
 
-        // New Password Visibility Toggle Logic
+        // Password Visibility Toggle Logic
         const togglePassword = document.getElementById("togglePassword");
         const passwordInput = document.getElementById("password");
         const eyeIcon = document.getElementById("eyeIcon");
@@ -136,10 +129,18 @@
             }
         });
 
+        // Parse referral code from URL if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const refCode = urlParams.get('ref');
+        if (refCode) {
+            document.getElementById("referral").value = refCode;
+            document.getElementById("referral").readOnly = true;
+            document.getElementById("referral").classList.add("bg-gray-200");
+        }
+
         registerForm.addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            // Gather inputs
             const fullName = document.getElementById("fullName").value;
             const username = document.getElementById("username").value;
             const phone = document.getElementById("phone").value;
@@ -147,19 +148,29 @@
             const password = document.getElementById("password").value;
             const referral = document.getElementById("referral").value;
 
-            // Update UI to loading state
+            // UI Loading State
             registerBtn.disabled = true;
             registerBtn.innerHTML = `
                 <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Processing...
+                Creating Account...
             `;
             messageBox.classList.add("hidden");
 
             try {
-                // 1. Create the user in Supabase Authentication
+                // 1. Check if Username exists (Supabase custom query)
+                const { data: userCheck, error: checkError } = await supabase
+                    .from('users')
+                    .select('username')
+                    .eq('username', username);
+
+                if (userCheck && userCheck.length > 0) {
+                    throw new Error("Username is already taken. Please choose another.");
+                }
+
+                // 2. Sign Up with Supabase Auth
                 const { data: authData, error: authError } = await supabase.auth.signUp({
                     email: email,
                     password: password,
@@ -167,44 +178,39 @@
 
                 if (authError) throw authError;
 
-                if (authData.user) {
-                    // 2. Insert user profile details into the public 'users' table
-                    const { error: dbError } = await supabase
-                        .from('users')
-                        .insert([
-                            {
-                                id: authData.user.id, // Link to the auth user
-                                full_name: fullName,
-                                username: username,
-                                phone: phone,
-                                email: email,
-                                referral_code: referral,
-                                wallet_balance: 0,
-                                role: "customer",
-                                status: "active"
-                            }
-                        ]);
+                const userId = authData.user.id;
 
-                    if (dbError) throw dbError;
+                // 3. Save extra details to 'users' table
+                const { error: dbError } = await supabase
+                    .from('users')
+                    .insert([
+                        { 
+                            id: userId, 
+                            full_name: fullName, 
+                            username: username, 
+                            phone: phone, 
+                            email: email,
+                            referral_code: referral,
+                            role: 'customer',
+                            wallet_balance: 0.00
+                        }
+                    ]);
 
-                    // Show Success Message
-                    messageBox.className = "mt-4 text-center text-sm font-semibold p-3 rounded-lg bg-green-50 text-green-600";
-                    messageBox.innerHTML = "Account created successfully! Routing to login...";
-                    messageBox.classList.remove("hidden");
+                if (dbError) throw dbError;
 
-                    // Route to Login Page
-                    setTimeout(() => {
-                        window.location.href = "login.html";
-                    }, 2000);
-                }
+                // Success State
+                messageBox.innerHTML = "<span class='text-accent'>Account Created Successfully! Redirecting to dashboard...</span>";
+                messageBox.classList.remove("hidden");
+
+                // CORRECTED PATH: Route to Customer Dashboard
+                setTimeout(() => {
+                    window.location.href = "dashboard/customer.html";
+                }, 2000);
 
             } catch (error) {
-                // Show Error Message
-                messageBox.className = "mt-4 text-center text-sm font-semibold p-3 rounded-lg bg-red-50 text-red-600";
-                messageBox.innerHTML = error.message || "An error occurred during registration.";
+                // Error State
+                messageBox.innerHTML = `<span class='text-red-500'>${error.message}</span>`;
                 messageBox.classList.remove("hidden");
-                
-                // Reset Button
                 registerBtn.disabled = false;
                 registerBtn.innerHTML = "<span>Create Account</span>";
             }
